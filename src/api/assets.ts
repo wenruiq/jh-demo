@@ -1,4 +1,4 @@
-import type { ListAssetsResponse, GetAssetResponse } from "@/types/journal"
+import type { GetAssetResponse, ListAssetsResponse } from "@/types/journal"
 
 export async function fetchAssets(period?: string): Promise<ListAssetsResponse> {
   const params = new URLSearchParams()
@@ -28,7 +28,7 @@ export async function fetchAssetDetail(assetId: string): Promise<GetAssetRespons
 
 export async function updateAssetStatus(
   assetId: string,
-  status: string,
+  status: string
 ): Promise<GetAssetResponse> {
   const response = await fetch(`/api/assets/${assetId}/status`, {
     method: "PATCH",

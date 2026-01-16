@@ -1,8 +1,8 @@
-import { useEffect } from "react"
 import { ChevronRight, Plus } from "lucide-react"
-import { MainLayout } from "@/components/layout/MainLayout"
-import { JournalListPanel } from "@/components/journal/JournalListPanel"
-import { JournalDetailPanel } from "@/components/journal/JournalDetailPanel"
+import { useEffect } from "react"
+import { JournalDetailPanel } from "@/components/journal/journal-detail-panel"
+import { JournalListPanel } from "@/components/journal/journal-list-panel"
+import { MainLayout } from "@/components/layout/main-layout"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useJournalStore } from "@/store/journalStore"
-import { useAssets, useAssetDetail } from "@/hooks/useAssets"
+import { useAssetDetail, useAssets } from "@/hooks/use-assets"
+import { useJournalStore } from "@/store/journal-store"
 
 function App() {
   const { selectedAssetId, setSelectedAssetId } = useJournalStore()
@@ -61,9 +61,9 @@ function App() {
       <div className="flex flex-1 overflow-hidden">
         <JournalListPanel
           assets={assets}
-          selectedId={selectedAssetId}
-          onSelect={setSelectedAssetId}
           isLoading={isLoadingAssets}
+          onSelect={setSelectedAssetId}
+          selectedId={selectedAssetId}
         />
         <JournalDetailPanel
           asset={selectedAsset}

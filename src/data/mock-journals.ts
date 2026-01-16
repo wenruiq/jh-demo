@@ -159,10 +159,10 @@ export const mockAssetDetails: Record<string, AssetDetail> = Object.fromEntries(
     asset.id,
     {
       ...asset,
-      totalDebitAmount: (Math.random() * 1000000).toFixed(2),
-      totalCreditAmount: (Math.random() * 1000000).toFixed(2),
+      totalDebitAmount: (Math.random() * 1_000_000).toFixed(2),
+      totalCreditAmount: (Math.random() * 1_000_000).toFixed(2),
       attachmentCount: Math.floor(Math.random() * 10),
       journalEntryCount: Math.floor(Math.random() * 50) + 5,
     },
-  ]),
+  ])
 )

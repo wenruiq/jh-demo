@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { fetchAssets, fetchAssetDetail } from "@/api/assets"
+import { fetchAssetDetail, fetchAssets } from "@/api/assets"
 
 export function useAssets(period?: string) {
   return useQuery({
@@ -12,7 +12,9 @@ export function useAssetDetail(assetId: string | null) {
   return useQuery({
     queryKey: ["asset", assetId],
     queryFn: () => {
-      if (!assetId) throw new Error("Asset ID is required")
+      if (!assetId) {
+        throw new Error("Asset ID is required")
+      }
       return fetchAssetDetail(assetId)
     },
     enabled: !!assetId,

@@ -1,10 +1,10 @@
 import { ChevronLeft, ChevronRight, Filter, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
-import { JournalCard } from "./JournalCard"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Asset } from "@/types/journal"
+import { JournalCard } from "./journal-card"
 
 interface JournalListPanelProps {
   assets: Asset[]
@@ -26,7 +26,7 @@ function LoadingSkeleton() {
   return (
     <div className="flex flex-col gap-2">
       {SKELETON_ITEMS.map((id) => (
-        <div key={id} className="rounded-lg border p-3">
+        <div className="rounded-lg border p-3" key={id}>
           <Skeleton className="mb-2 h-4 w-3/4" />
           <div className="flex items-center gap-2">
             <Skeleton className="h-5 w-10 rounded-full" />
@@ -47,15 +47,15 @@ export function JournalListPanel({
   return (
     <div className="flex h-full w-80 shrink-0 flex-col border-r">
       <div className="border-b p-3">
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs className="w-full" defaultValue="all">
           <TabsList className="w-full">
-            <TabsTrigger value="pending" className="flex-1">
+            <TabsTrigger className="flex-1" value="pending">
               Pending
             </TabsTrigger>
-            <TabsTrigger value="involved" className="flex-1">
+            <TabsTrigger className="flex-1" value="involved">
               Involved
             </TabsTrigger>
-            <TabsTrigger value="all" className="flex-1">
+            <TabsTrigger className="flex-1" value="all">
               All
             </TabsTrigger>
           </TabsList>
@@ -65,10 +65,10 @@ export function JournalListPanel({
       <div className="border-b p-3">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search journals..." className="pl-8" />
+            <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
+            <Input className="pl-8" placeholder="Search journals..." />
           </div>
-          <Button variant="outline" size="icon">
+          <Button size="icon" variant="outline">
             <Filter className="h-4 w-4" />
           </Button>
         </div>
@@ -81,9 +81,9 @@ export function JournalListPanel({
           <div className="flex flex-col gap-2">
             {assets.map((asset) => (
               <JournalCard
-                key={asset.id}
                 asset={asset}
                 isSelected={selectedId === asset.id}
+                key={asset.id}
                 onClick={() => onSelect(asset.id)}
               />
             ))}
@@ -92,15 +92,15 @@ export function JournalListPanel({
       </div>
 
       <div className="flex items-center justify-between border-t px-3 py-2">
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           {isLoading ? "Loading..." : `Showing ${assets.length} entries`}
         </span>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button className="h-8 w-8" size="icon" variant="ghost">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-xs text-muted-foreground">1 / 1</span>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <span className="text-muted-foreground text-xs">1 / 1</span>
+          <Button className="h-8 w-8" size="icon" variant="ghost">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

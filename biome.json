@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,7 +7,13 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx"]
+    "includes": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "src/**/*.js",
+      "src/**/*.jsx",
+      "!!**/public/mockServiceWorker.js"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -42,7 +48,8 @@
         "noForEach": "off"
       },
       "performance": {
-        "noDelete": "warn"
+        "noDelete": "warn",
+        "noNamespaceImport": "off"
       }
     }
   },
@@ -51,5 +58,6 @@
       "quoteStyle": "double",
       "semicolons": "asNeeded"
     }
-  }
+  },
+  "extends": ["ultracite/biome/core", "ultracite/biome/react"]
 }

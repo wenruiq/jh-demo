@@ -1,6 +1,6 @@
-import { http, HttpResponse, delay } from "msw"
-import { mockAssets, mockAssetDetails } from "@/data/mockJournals"
-import type { ListAssetsResponse, GetAssetResponse } from "@/types/journal"
+import { delay, HttpResponse, http } from "msw"
+import { mockAssetDetails, mockAssets } from "@/data/mock-journals"
+import type { GetAssetResponse, ListAssetsResponse } from "@/types/journal"
 
 const API_DELAY = 300 // Simulated network delay in ms
 

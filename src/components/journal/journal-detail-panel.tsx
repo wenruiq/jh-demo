@@ -1,7 +1,7 @@
 import { FileText, Loader2 } from "lucide-react"
-import { JournalDetailHeader } from "./JournalDetailHeader"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { AssetDetail } from "@/types/journal"
+import { JournalDetailHeader } from "./journal-detail-header"
 
 interface JournalDetailPanelProps {
   asset: AssetDetail | null
@@ -41,7 +41,7 @@ export function JournalDetailPanel({ asset, isLoading }: JournalDetailPanelProps
     return (
       <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground">
         <FileText className="mb-4 h-12 w-12" />
-        <p className="text-lg font-medium">No journal selected</p>
+        <p className="font-medium text-lg">No journal selected</p>
         <p className="text-sm">Select a journal entry from the list to view details</p>
       </div>
     )
@@ -51,7 +51,7 @@ export function JournalDetailPanel({ asset, isLoading }: JournalDetailPanelProps
     <div className="flex flex-1 flex-col overflow-hidden">
       <JournalDetailHeader asset={asset} />
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted">
+        <div className="flex h-full items-center justify-center rounded-lg border-2 border-muted border-dashed">
           <p className="text-muted-foreground">Detail content will be added here</p>
         </div>
       </div>

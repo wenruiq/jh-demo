@@ -16,8 +16,14 @@ const badgeVariants = cva(
         outline: "text-foreground",
         // Neutral variant for journal types
         neutral: "border-transparent bg-secondary text-secondary-foreground",
-        // Blue variant for status
-        blue: "border-transparent bg-primary/10 text-primary",
+        // Blue variant for status (in-progress/active states)
+        blue: "border-transparent bg-info-muted text-info",
+        // Success variant for completed/passed states
+        success: "border-transparent bg-success-muted text-success",
+        // Warning variant for attention-needed states
+        warning: "border-transparent bg-warning-muted text-warning",
+        // Destructive outline for rejection/error states
+        "destructive-outline": "border-transparent bg-destructive-muted text-destructive",
       },
     },
     defaultVariants: {

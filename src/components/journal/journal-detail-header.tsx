@@ -1,4 +1,4 @@
-import { Copy, RefreshCw, Settings } from "lucide-react"
+import { Link, RefreshCw, Settings } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { AssetDetail } from "@/types/journal"
@@ -20,7 +20,7 @@ export function JournalDetailHeader({ asset }: JournalDetailHeaderProps) {
             <RefreshCw className="h-4 w-4" />
           </Button>
           <Button className="h-8 w-8" size="icon" variant="ghost">
-            <Copy className="h-4 w-4" />
+            <Link className="h-4 w-4" />
           </Button>
           <Button className="h-8 w-8" size="icon" variant="ghost">
             <Settings className="h-4 w-4" />

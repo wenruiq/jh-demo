@@ -4,28 +4,30 @@ export type AssetType = (typeof ASSET_TYPES)[number]
 
 // Asset statuses (workflow stages)
 export const ASSET_STATUSES = [
-  "ASSET_GENERATED",
-  "ENTRY_GENERATED",
-  "SUBMITTING",
-  "VALIDATING",
-  "VALIDATED",
-  "IN_REVIEW",
-  "APPROVED",
-  "CLOSED",
+  "GENERATION",
+  "PREPARATION",
+  "SUBMISSION",
+  "REVIEW",
+  "EBS_UPLOAD",
 ] as const
 export type AssetStatus = (typeof ASSET_STATUSES)[number]
 
 // Human readable status labels
 export const ASSET_STATUS_LABELS: Record<AssetStatus, string> = {
-  ASSET_GENERATED: "Generated",
-  ENTRY_GENERATED: "Entry Generated",
-  SUBMITTING: "Submitting",
-  VALIDATING: "Validating",
-  VALIDATED: "Validated",
-  IN_REVIEW: "In Review",
-  APPROVED: "Approved",
-  CLOSED: "Closed",
+  GENERATION: "Generation",
+  PREPARATION: "Preparation",
+  SUBMISSION: "Submission",
+  REVIEW: "Review",
+  EBS_UPLOAD: "EBS Upload",
 }
+
+// Validation status for preparation phase
+export const VALIDATION_STATUSES = ["PENDING", "VALIDATING", "SUCCESS", "FAILED"] as const
+export type ValidationStatus = (typeof VALIDATION_STATUSES)[number]
+
+// EBS upload status
+export const EBS_STATUSES = ["PENDING", "UPLOADING", "SUCCESS", "FAILED"] as const
+export type EbsStatus = (typeof EBS_STATUSES)[number]
 
 // View modes for list filtering
 export const VIEW_MODES = ["PENDING_ACTION", "INVOLVES_ME", "ALL"] as const
@@ -46,6 +48,8 @@ export interface Asset {
   description?: string
   type: AssetType
   status: AssetStatus
+  validationStatus: ValidationStatus
+  ebsStatus: EbsStatus
   period: string // e.g. "2025-01"
   currency?: string
   companyName?: string
@@ -61,6 +65,7 @@ export interface AssetDetail extends Asset {
   totalCreditAmount?: string
   attachmentCount?: number
   journalEntryCount?: number
+  rejectionReason?: string
 }
 
 // API response types
@@ -74,5 +79,17 @@ export interface ListAssetsResponse {
 }
 
 export interface GetAssetResponse {
+  data: AssetDetail
+}
+
+// Update status request/response
+export interface UpdateAssetStatusRequest {
+  status?: AssetStatus
+  validationStatus?: ValidationStatus
+  ebsStatus?: EbsStatus
+  rejectionReason?: string
+}
+
+export interface UpdateAssetStatusResponse {
   data: AssetDetail
 }

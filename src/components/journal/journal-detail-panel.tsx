@@ -2,6 +2,8 @@ import { FileText, Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { AssetDetail } from "@/types/journal"
 import { JournalDetailHeader } from "./journal-detail-header"
+import { StatusActions } from "./status-actions"
+import { StatusFlow } from "./status-flow"
 
 interface JournalDetailPanelProps {
   asset: AssetDetail | null
@@ -50,9 +52,18 @@ export function JournalDetailPanel({ asset, isLoading }: JournalDetailPanelProps
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <JournalDetailHeader asset={asset} />
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="flex h-full items-center justify-center rounded-lg border-2 border-muted border-dashed">
-          <p className="text-muted-foreground">Detail content will be added here</p>
+      <div className="flex-1 overflow-y-auto">
+        {/* Status Flow & Actions Section - Compact */}
+        <div className="space-y-3 border-b px-6 py-4">
+          <StatusFlow asset={asset} />
+          <StatusActions asset={asset} />
+        </div>
+
+        {/* Content Area - Placeholder for future features */}
+        <div className="p-6">
+          <div className="flex h-64 items-center justify-center rounded-lg border-2 border-muted border-dashed">
+            <p className="text-muted-foreground">Journal entries table will be added here</p>
+          </div>
         </div>
       </div>
     </div>

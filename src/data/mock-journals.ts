@@ -1,159 +1,165 @@
-import type { Asset, AssetDetail } from "@/types/journal"
+import type { Asset, AssetDetail, AssetStatus, EbsStatus, ValidationStatus } from "@/types/journal"
 
-export const mockAssets: Asset[] = [
-  {
-    id: "asset-001",
-    name: "Monthly Revenue Recognition",
-    type: "GL",
-    status: "CLOSED",
-    period: "2025-12",
-    companyName: "Shopee SG",
+// Helper to create assets with consistent fields
+function createAsset(
+  id: string,
+  name: string,
+  type: Asset["type"],
+  status: AssetStatus,
+  period: string,
+  companyName: string,
+  validation: ValidationStatus = "PENDING",
+  ebs: EbsStatus = "PENDING"
+): Asset {
+  return {
+    id,
+    name,
+    type,
+    status,
+    validationStatus: validation,
+    ebsStatus: ebs,
+    period,
+    companyName,
     createdAt: "2025-12-15T10:30:00Z",
     updatedAt: "2025-12-20T14:00:00Z",
-  },
-  {
-    id: "asset-002",
-    name: "Q4 Accounts Receivable Adjustment",
-    type: "AR",
-    status: "IN_REVIEW",
-    period: "2025-12",
-    companyName: "Shopee SG",
-    createdAt: "2025-12-14T14:20:00Z",
-    updatedAt: "2025-12-18T09:30:00Z",
-  },
-  {
-    id: "asset-003",
-    name: "Vendor Invoice Processing",
-    type: "AP",
-    status: "VALIDATED",
-    period: "2025-12",
-    companyName: "Shopee MY",
-    createdAt: "2025-12-13T09:15:00Z",
-    updatedAt: "2025-12-17T11:45:00Z",
-  },
-  {
-    id: "asset-004",
-    name: "Intercompany Reconciliation",
-    type: "GRP",
-    status: "SUBMITTING",
-    period: "2025-12",
-    companyName: "Sea Group",
-    createdAt: "2025-12-12T16:45:00Z",
-    updatedAt: "2025-12-16T08:20:00Z",
-  },
-  {
-    id: "asset-005",
-    name: "Depreciation Entry",
-    type: "GL",
-    status: "ENTRY_GENERATED",
-    period: "2025-12",
-    companyName: "Shopee TH",
-    createdAt: "2025-12-11T11:00:00Z",
-    updatedAt: "2025-12-15T16:30:00Z",
-  },
-  {
-    id: "asset-006",
-    name: "Customer Payment Allocation",
-    type: "AR",
-    status: "APPROVED",
-    period: "2025-11",
-    companyName: "Shopee ID",
-    createdAt: "2025-11-28T13:30:00Z",
-    updatedAt: "2025-12-05T10:15:00Z",
-  },
-  {
-    id: "asset-007",
-    name: "Expense Accruals",
-    type: "AP",
-    status: "IN_REVIEW",
-    period: "2025-11",
-    companyName: "Shopee PH",
-    createdAt: "2025-11-25T10:00:00Z",
-    updatedAt: "2025-12-02T14:45:00Z",
-  },
-  {
-    id: "asset-008",
-    name: "Subsidiary Consolidation",
-    type: "GRP",
-    status: "VALIDATING",
-    period: "2025-11",
-    companyName: "Sea Group",
-    createdAt: "2025-11-22T15:20:00Z",
-    updatedAt: "2025-11-30T09:00:00Z",
-  },
-  {
-    id: "asset-009",
-    name: "Inventory Valuation Adjustment",
-    type: "GL",
-    status: "SUBMITTING",
-    period: "2025-11",
-    companyName: "Shopee VN",
-    createdAt: "2025-11-20T09:45:00Z",
-    updatedAt: "2025-11-28T16:20:00Z",
-  },
-  {
-    id: "asset-010",
-    name: "Bad Debt Write-off",
-    type: "AR",
-    status: "ASSET_GENERATED",
-    period: "2025-11",
-    companyName: "Shopee TW",
-    createdAt: "2025-11-18T14:10:00Z",
-    updatedAt: "2025-11-25T11:30:00Z",
-  },
-  {
-    id: "asset-011",
-    name: "Prepaid Expense Amortization",
-    type: "GL",
-    status: "CLOSED",
-    period: "2025-10",
-    companyName: "Shopee SG",
-    createdAt: "2025-10-30T11:30:00Z",
-    updatedAt: "2025-11-10T08:45:00Z",
-  },
-  {
-    id: "asset-012",
-    name: "Credit Memo Processing",
-    type: "AR",
-    status: "APPROVED",
-    period: "2025-10",
-    companyName: "Shopee MY",
-    createdAt: "2025-10-28T16:00:00Z",
-    updatedAt: "2025-11-08T14:20:00Z",
-  },
-  {
-    id: "asset-013",
-    name: "Accrued Liabilities",
-    type: "AP",
-    status: "CLOSED",
-    period: "2025-10",
-    companyName: "Shopee ID",
-    createdAt: "2025-10-25T10:15:00Z",
-    updatedAt: "2025-11-05T09:30:00Z",
-  },
-  {
-    id: "asset-014",
-    name: "Dividend Distribution",
-    type: "GRP",
-    status: "IN_REVIEW",
-    period: "2025-10",
-    companyName: "Sea Group",
-    createdAt: "2025-10-22T13:45:00Z",
-    updatedAt: "2025-11-02T15:00:00Z",
-  },
-  {
-    id: "asset-015",
-    name: "Foreign Currency Revaluation",
-    type: "GL",
-    status: "VALIDATED",
-    period: "2025-10",
-    companyName: "Shopee BR",
-    createdAt: "2025-10-20T09:00:00Z",
-    updatedAt: "2025-10-30T11:45:00Z",
-  },
+  }
+}
+
+export const mockAssets: Asset[] = [
+  createAsset(
+    "asset-001",
+    "AAGPH-Test One Time Upload",
+    "GL",
+    "PREPARATION",
+    "2025-12",
+    "Shopee SG",
+    "SUCCESS"
+  ),
+  createAsset(
+    "asset-002",
+    "Q4 Accounts Receivable Adjustment",
+    "AR",
+    "REVIEW",
+    "2025-12",
+    "Shopee SG",
+    "SUCCESS"
+  ),
+  createAsset(
+    "asset-003",
+    "Vendor Invoice Processing",
+    "AP",
+    "SUBMISSION",
+    "2025-12",
+    "Shopee MY",
+    "SUCCESS"
+  ),
+  createAsset(
+    "asset-004",
+    "Intercompany Reconciliation",
+    "GRP",
+    "PREPARATION",
+    "2025-12",
+    "Sea Group",
+    "PENDING"
+  ),
+  createAsset(
+    "asset-005",
+    "Depreciation Entry",
+    "GL",
+    "PREPARATION",
+    "2025-12",
+    "Shopee TH",
+    "PENDING"
+  ),
+  createAsset(
+    "asset-006",
+    "Customer Payment Allocation",
+    "AR",
+    "EBS_UPLOAD",
+    "2025-11",
+    "Shopee ID",
+    "SUCCESS",
+    "SUCCESS"
+  ),
+  createAsset("asset-007", "Expense Accruals", "AP", "REVIEW", "2025-11", "Shopee PH", "SUCCESS"),
+  createAsset(
+    "asset-008",
+    "Subsidiary Consolidation",
+    "GRP",
+    "PREPARATION",
+    "2025-11",
+    "Sea Group",
+    "VALIDATING"
+  ),
+  createAsset(
+    "asset-009",
+    "Inventory Valuation Adjustment",
+    "GL",
+    "SUBMISSION",
+    "2025-11",
+    "Shopee VN",
+    "SUCCESS"
+  ),
+  createAsset(
+    "asset-010",
+    "Bad Debt Write-off",
+    "AR",
+    "PREPARATION",
+    "2025-11",
+    "Shopee TW",
+    "PENDING"
+  ),
+  createAsset(
+    "asset-011",
+    "Prepaid Expense Amortization",
+    "GL",
+    "EBS_UPLOAD",
+    "2025-10",
+    "Shopee SG",
+    "SUCCESS",
+    "SUCCESS"
+  ),
+  createAsset(
+    "asset-012",
+    "Credit Memo Processing",
+    "AR",
+    "EBS_UPLOAD",
+    "2025-10",
+    "Shopee MY",
+    "SUCCESS",
+    "SUCCESS"
+  ),
+  createAsset(
+    "asset-013",
+    "Accrued Liabilities",
+    "AP",
+    "EBS_UPLOAD",
+    "2025-10",
+    "Shopee ID",
+    "SUCCESS",
+    "SUCCESS"
+  ),
+  createAsset(
+    "asset-014",
+    "Dividend Distribution",
+    "GRP",
+    "REVIEW",
+    "2025-10",
+    "Sea Group",
+    "SUCCESS"
+  ),
+  createAsset(
+    "asset-015",
+    "Foreign Currency Revaluation",
+    "GL",
+    "SUBMISSION",
+    "2025-10",
+    "Shopee BR",
+    "SUCCESS"
+  ),
 ]
 
-// Extended details for individual asset view
+// Extended details for individual asset view - mutable for demo purposes
 export const mockAssetDetails: Record<string, AssetDetail> = Object.fromEntries(
   mockAssets.map((asset) => [
     asset.id,
@@ -163,6 +169,37 @@ export const mockAssetDetails: Record<string, AssetDetail> = Object.fromEntries(
       totalCreditAmount: (Math.random() * 1_000_000).toFixed(2),
       attachmentCount: Math.floor(Math.random() * 10),
       journalEntryCount: Math.floor(Math.random() * 50) + 5,
+      rejectionReason: undefined,
     },
   ])
 )
+
+// Update an asset in the mock data (for demo status transitions)
+export function updateMockAsset(
+  assetId: string,
+  updates: Partial<AssetDetail>
+): AssetDetail | null {
+  const asset = mockAssetDetails[assetId]
+  if (!asset) {
+    return null
+  }
+
+  const updatedAsset = {
+    ...asset,
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  }
+  mockAssetDetails[assetId] = updatedAsset
+
+  // Also update in the list
+  const listIndex = mockAssets.findIndex((a) => a.id === assetId)
+  if (listIndex !== -1) {
+    mockAssets[listIndex] = {
+      ...mockAssets[listIndex],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    }
+  }
+
+  return updatedAsset
+}

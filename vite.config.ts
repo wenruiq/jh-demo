@@ -11,4 +11,22 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split large vendor libraries into separate chunks
+          "vendor-react": ["react", "react-dom"],
+          "vendor-recharts": ["recharts"],
+          "vendor-markdown": ["react-markdown"],
+          "vendor-radix": [
+            "@radix-ui/react-collapsible",
+            "@radix-ui/react-select",
+            "@radix-ui/react-slot",
+            "@radix-ui/react-tabs",
+          ],
+        },
+      },
+    },
+  },
 })

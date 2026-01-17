@@ -1,9 +1,12 @@
 import { FileText, Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useJournalStore } from "@/store/journal-store"
 import type { AssetDetail } from "@/types/journal"
 import { JournalDetailHeader } from "./journal-detail-header"
-import { StatusActions } from "./status-actions"
-import { StatusFlow } from "./status-flow"
+import { JournalView } from "./views/journal-view"
+import { PreparerCoverSheetView } from "./views/preparer-cover-sheet-view"
+import { ReviewerCoverSheetView } from "./views/reviewer-cover-sheet-view"
+import { ReviewerSummaryView } from "./views/reviewer-summary-view"
 
 interface JournalDetailPanelProps {
   asset: AssetDetail | null
@@ -34,6 +37,21 @@ function LoadingSkeleton() {
   )
 }
 
+function ViewRouter({ asset }: { asset: AssetDetail }) {
+  const detailView = useJournalStore((state) => state.detailView)
+
+  switch (detailView) {
+    case "preparer-cover-sheet":
+      return <PreparerCoverSheetView />
+    case "reviewer-summary":
+      return <ReviewerSummaryView />
+    case "reviewer-cover-sheet":
+      return <ReviewerCoverSheetView />
+    default:
+      return <JournalView asset={asset} />
+  }
+}
+
 export function JournalDetailPanel({ asset, isLoading }: JournalDetailPanelProps) {
   if (isLoading) {
     return <LoadingSkeleton />
@@ -53,18 +71,7 @@ export function JournalDetailPanel({ asset, isLoading }: JournalDetailPanelProps
     <div className="flex flex-1 flex-col overflow-hidden">
       <JournalDetailHeader asset={asset} />
       <div className="flex-1 overflow-y-auto">
-        {/* Status Flow & Actions Section - Compact */}
-        <div className="space-y-3 border-b px-6 py-4">
-          <StatusFlow asset={asset} />
-          <StatusActions asset={asset} />
-        </div>
-
-        {/* Content Area - Placeholder for future features */}
-        <div className="p-6">
-          <div className="flex h-64 items-center justify-center rounded-lg border-2 border-muted border-dashed">
-            <p className="text-muted-foreground">Journal entries table will be added here</p>
-          </div>
-        </div>
+        <ViewRouter asset={asset} />
       </div>
     </div>
   )

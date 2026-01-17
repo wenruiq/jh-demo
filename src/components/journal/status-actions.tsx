@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   Check,
   CheckCircle2,
-  FileSpreadsheet,
   Loader2,
   RefreshCcw,
   Send,
@@ -22,6 +21,7 @@ import {
   useValidateAsset,
 } from "@/hooks/use-assets"
 import { cn } from "@/lib/utils"
+import { useJournalStore } from "@/store/journal-store"
 import type { AssetDetail, EbsStatus } from "@/types/journal"
 
 interface StatusActionsProps {
@@ -30,6 +30,7 @@ interface StatusActionsProps {
 
 export function StatusActions({ asset }: StatusActionsProps) {
   const { status, ebsStatus } = asset
+  const setDetailView = useJournalStore((state) => state.setDetailView)
 
   const validateMutation = useValidateAsset()
   const submitForReviewMutation = useSubmitForReview()
@@ -84,6 +85,7 @@ export function StatusActions({ asset }: StatusActionsProps) {
           asset={asset}
           isLoading={isLoading}
           isValidating={validateMutation.isPending}
+          onOpenCoverSheet={() => setDetailView("preparer-cover-sheet")}
           onValidate={() => validateMutation.mutate(asset.id)}
         />
       )
@@ -106,6 +108,7 @@ export function StatusActions({ asset }: StatusActionsProps) {
           isLoading={isLoading}
           isRejecting={rejectMutation.isPending}
           onApprove={() => approveMutation.mutate(asset.id)}
+          onOpenReviewSummary={() => setDetailView("reviewer-summary")}
           onReject={() => rejectMutation.mutate({ assetId: asset.id })}
         />
       )
@@ -128,6 +131,7 @@ export function StatusActions({ asset }: StatusActionsProps) {
 interface PreparationActionsProps {
   asset: AssetDetail
   onValidate: () => void
+  onOpenCoverSheet: () => void
   isValidating: boolean
   isLoading: boolean
 }
@@ -135,6 +139,7 @@ interface PreparationActionsProps {
 function PreparationActions({
   asset,
   onValidate,
+  onOpenCoverSheet,
   isValidating,
   isLoading,
 }: PreparationActionsProps) {
@@ -156,9 +161,15 @@ function PreparationActions({
       </div>
 
       {/* Action Buttons */}
-      <Button className="h-8 gap-1.5 px-3 text-xs" disabled={isLoading} size="sm" variant="outline">
-        <FileSpreadsheet className="h-3.5 w-3.5" />
-        Cover Sheet
+      <Button
+        className="h-8 gap-1.5 px-3 text-xs"
+        disabled={isLoading}
+        onClick={onOpenCoverSheet}
+        size="sm"
+        variant="outline"
+      >
+        <Sparkles className="h-3.5 w-3.5" />
+        Prepare Cover Sheet
       </Button>
 
       <Button
@@ -239,6 +250,7 @@ function SubmissionActions({
 interface ReviewActionsProps {
   onApprove: () => void
   onReject: () => void
+  onOpenReviewSummary: () => void
   isApproving: boolean
   isRejecting: boolean
   isLoading: boolean
@@ -247,6 +259,7 @@ interface ReviewActionsProps {
 function ReviewActions({
   onApprove,
   onReject,
+  onOpenReviewSummary,
   isApproving,
   isRejecting,
   isLoading,
@@ -260,7 +273,13 @@ function ReviewActions({
       </div>
 
       {/* Action Buttons */}
-      <Button className="h-8 gap-1.5 px-3 text-xs" disabled={isLoading} size="sm" variant="outline">
+      <Button
+        className="h-8 gap-1.5 px-3 text-xs"
+        disabled={isLoading}
+        onClick={onOpenReviewSummary}
+        size="sm"
+        variant="outline"
+      >
         <Sparkles className="h-3.5 w-3.5" />
         Review Summary
       </Button>

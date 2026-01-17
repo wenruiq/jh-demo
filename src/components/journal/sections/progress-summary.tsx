@@ -1,6 +1,7 @@
 import { CheckCircle2, Clock, FileText } from "lucide-react"
 import { useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { isCheckPassed, useDataQualityStore } from "@/store/data-quality-store"
 import { useDataUploadStore } from "@/store/data-upload-store"
 import { useJournalStore } from "@/store/journal-store"
 
@@ -86,24 +87,73 @@ function getUploadVariant(uploaded: number, total: number): "success" | "warning
   return "default"
 }
 
+function useQualityCheckProgress() {
+  const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
+  const checksByAssetId = useDataQualityStore((state) => state.checksByAssetId)
+  const initializeAsset = useDataQualityStore((state) => state.initializeAsset)
+
+  // Initialize asset on mount/change
+  useEffect(() => {
+    if (selectedAssetId) {
+      initializeAsset(selectedAssetId)
+    }
+  }, [selectedAssetId, initializeAsset])
+
+  if (!selectedAssetId) {
+    return { passed: 0, total: 0 }
+  }
+
+  const checks = checksByAssetId[selectedAssetId] ?? []
+  const total = checks.length
+  const passed = checks.filter((c) => isCheckPassed(c)).length
+
+  return { passed, total }
+}
+
+function getQualityCheckDescription(passed: number, total: number): string {
+  if (total === 0) {
+    return "No checks defined"
+  }
+  const allPassed = passed === total
+  if (allPassed) {
+    return "All checks passed"
+  }
+  const pending = total - passed
+  return `${pending} check${pending !== 1 ? "s" : ""} pending`
+}
+
+function getQualityCheckVariant(passed: number, total: number): "success" | "warning" | "default" {
+  if (total > 0 && passed === total) {
+    return "success"
+  }
+  if (total > 0 && passed > 0) {
+    return "warning"
+  }
+  if (total > 0) {
+    return "warning"
+  }
+  return "default"
+}
+
 export function ProgressSummary({ readonly = false }: ProgressSummaryProps) {
-  const { uploaded, total } = useDataUploadProgress()
+  const { uploaded, total: uploadTotal } = useDataUploadProgress()
+  const { passed: checksPassed, total: checksTotal } = useQualityCheckProgress()
 
   return (
     <div className={cn("flex gap-3 p-4", readonly && "opacity-80")}>
       <ProgressCard
-        description={getUploadDescription(uploaded, total)}
+        description={getUploadDescription(uploaded, uploadTotal)}
         icon={<FileText className="h-5 w-5" />}
         label="Data Uploaded"
-        value={`${uploaded}/${total}`}
-        variant={getUploadVariant(uploaded, total)}
+        value={`${uploaded}/${uploadTotal}`}
+        variant={getUploadVariant(uploaded, uploadTotal)}
       />
       <ProgressCard
-        description="2 checks pending"
+        description={getQualityCheckDescription(checksPassed, checksTotal)}
         icon={<CheckCircle2 className="h-5 w-5" />}
         label="Quality Checks"
-        value="8/10"
-        variant="warning"
+        value={`${checksPassed}/${checksTotal}`}
+        variant={getQualityCheckVariant(checksPassed, checksTotal)}
       />
       <ProgressCard
         description="On track for deadline"

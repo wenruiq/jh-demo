@@ -171,7 +171,7 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
     set((state) => ({ loading: { ...state.loading, uploadFile: uploadId } }))
 
     // Longer delay for file upload simulation
-    await simulateApiDelay(1200)
+    await simulateApiDelay(800)
 
     set((state) => {
       const existingUploads = state.uploadsByAssetId[assetId] ?? []

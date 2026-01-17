@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { cn } from "@/lib/utils"
 
 interface MarkdownDisplayProps {
@@ -22,7 +23,24 @@ export function MarkdownDisplay({ content, className }: MarkdownDisplayProps) {
           code: ({ children }) => (
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">{children}</code>
           ),
+          table: ({ children }) => (
+            <div className="my-3 overflow-x-auto">
+              <table className="w-full border-collapse text-sm">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="border-border border-b bg-muted/50">{children}</thead>
+          ),
+          tbody: ({ children }) => <tbody className="divide-y divide-border">{children}</tbody>,
+          tr: ({ children }) => <tr className="hover:bg-muted/30">{children}</tr>,
+          th: ({ children }) => (
+            <th className="px-3 py-2 text-left font-medium text-muted-foreground text-xs">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => <td className="px-3 py-2 text-xs">{children}</td>,
         }}
+        remarkPlugins={[remarkGfm]}
       >
         {content}
       </ReactMarkdown>

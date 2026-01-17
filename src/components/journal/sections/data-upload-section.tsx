@@ -481,7 +481,7 @@ function AddDataUploadDialog({ onAdd, isLoading }: AddDataUploadDialogProps) {
       <DialogTrigger asChild>
         <Button className="h-7 gap-1.5 px-2.5 text-xs" size="sm" variant="outline">
           <Plus className="h-3.5 w-3.5" />
-          Requirement
+          Add
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">

@@ -15,6 +15,7 @@ export function PreparerCoverSheetView() {
       <DataQualityCheck />
       <AiPromptPanel
         promptPlaceholder="Ask AI to analyze the journal data..."
+        showUseResultButton
         title="Summary & Findings"
       />
     </div>

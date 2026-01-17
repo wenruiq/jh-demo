@@ -1,5 +1,6 @@
 import { ChevronRight, Plus } from "lucide-react"
 import { useEffect } from "react"
+import { Toaster } from "sonner"
 import { JournalDetailPanel } from "@/components/journal/journal-detail-panel"
 import { JournalListPanel } from "@/components/journal/journal-list-panel"
 import { MainLayout } from "@/components/layout/main-layout"
@@ -34,6 +35,7 @@ function App() {
 
   return (
     <MainLayout>
+      <Toaster position="top-right" richColors />
       <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-4 py-2">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 text-sm">

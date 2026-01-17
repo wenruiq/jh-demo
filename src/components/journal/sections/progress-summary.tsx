@@ -1,6 +1,7 @@
-import { CheckCircle2, Clock, FileText } from "lucide-react"
+import { CheckCircle2, FileText, Sparkles } from "lucide-react"
 import { useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { type FindingsStatus, useAiFindingsStore } from "@/store/ai-findings-store"
 import { isCheckPassed, useDataQualityStore } from "@/store/data-quality-store"
 import { useDataUploadStore } from "@/store/data-upload-store"
 import { useJournalStore } from "@/store/journal-store"
@@ -10,7 +11,7 @@ interface ProgressCardProps {
   label: string
   value: string | number
   description?: string
-  variant?: "default" | "success" | "warning"
+  variant?: "default" | "success" | "warning" | "error"
 }
 
 function ProgressCard({ icon, label, value, description, variant = "default" }: ProgressCardProps) {
@@ -21,6 +22,7 @@ function ProgressCard({ icon, label, value, description, variant = "default" }: 
           "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
           variant === "success" && "bg-success-muted text-success",
           variant === "warning" && "bg-warning-muted text-warning",
+          variant === "error" && "bg-destructive/10 text-destructive",
           variant === "default" && "bg-muted text-muted-foreground"
         )}
       >
@@ -135,9 +137,43 @@ function getQualityCheckVariant(passed: number, total: number): "success" | "war
   return "default"
 }
 
+function getFindingsStatusLabel(status: FindingsStatus): string {
+  switch (status) {
+    case "finalized":
+      return "Finalized"
+    case "generated":
+      return "Generated"
+    default:
+      return "Not Started"
+  }
+}
+
+function getFindingsStatusDescription(status: FindingsStatus): string {
+  switch (status) {
+    case "finalized":
+      return "Findings adopted"
+    case "generated":
+      return "Awaiting review"
+    default:
+      return "Generate AI analysis"
+  }
+}
+
+function getFindingsStatusVariant(status: FindingsStatus): "success" | "warning" | "error" {
+  switch (status) {
+    case "finalized":
+      return "success"
+    case "generated":
+      return "warning"
+    default:
+      return "error"
+  }
+}
+
 export function ProgressSummary({ readonly = false }: ProgressSummaryProps) {
   const { uploaded, total: uploadTotal } = useDataUploadProgress()
   const { passed: checksPassed, total: checksTotal } = useQualityCheckProgress()
+  const findingsStatus = useAiFindingsStore((state) => state.getStatus())
 
   return (
     <div className={cn("flex gap-3 p-4", readonly && "opacity-80")}>
@@ -156,11 +192,11 @@ export function ProgressSummary({ readonly = false }: ProgressSummaryProps) {
         variant={getQualityCheckVariant(checksPassed, checksTotal)}
       />
       <ProgressCard
-        description="On track for deadline"
-        icon={<Clock className="h-5 w-5" />}
-        label="Time Remaining"
-        value="2 days"
-        variant="default"
+        description={getFindingsStatusDescription(findingsStatus)}
+        icon={<Sparkles className="h-5 w-5" />}
+        label="Summary & Key Findings"
+        value={getFindingsStatusLabel(findingsStatus)}
+        variant={getFindingsStatusVariant(findingsStatus)}
       />
     </div>
   )

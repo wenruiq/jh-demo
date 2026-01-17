@@ -16,12 +16,22 @@ const MOCK_AI_SUMMARY = `
 export function SummarySection() {
   return (
     <SectionContainer title="Summary">
-      <div className="flex gap-4" style={{ height: "180px" }}>
-        <div className="flex-1 overflow-y-auto pr-2">
-          <MarkdownDisplay content={MOCK_AI_SUMMARY} />
+      <div className="flex gap-6" style={{ height: "220px" }}>
+        <div className="flex flex-1 flex-col">
+          <h4 className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+            Key Findings
+          </h4>
+          <div className="flex-1 overflow-y-auto pr-2">
+            <MarkdownDisplay content={MOCK_AI_SUMMARY} />
+          </div>
         </div>
-        <div className="w-[280px] shrink-0">
-          <MonthlyTrendChart />
+        <div className="flex w-[300px] shrink-0 flex-col">
+          <h4 className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+            Monthly Trends
+          </h4>
+          <div className="flex-1">
+            <MonthlyTrendChart />
+          </div>
         </div>
       </div>
     </SectionContainer>

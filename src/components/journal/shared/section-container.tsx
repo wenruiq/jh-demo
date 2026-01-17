@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
@@ -24,28 +24,28 @@ export function SectionContainer({
 
   if (!collapsible) {
     return (
-      <div className={cn("border-b", className)}>
-        <div className="flex h-10 items-center px-6">
-          <h3 className="font-medium text-sm">{title}</h3>
+      <div className={cn("mt-2", className)}>
+        <div className="flex h-9 items-center gap-2 border-border/60 border-b bg-muted/40 px-6">
+          <h3 className="font-medium text-foreground/80 text-sm">{title}</h3>
         </div>
-        <div className={cn("px-6 pb-4", contentClassName)}>{children}</div>
+        <div className={cn("px-6 py-4", contentClassName)}>{children}</div>
       </div>
     )
   }
 
   return (
-    <Collapsible className={cn("border-b", className)} onOpenChange={setIsOpen} open={isOpen}>
-      <CollapsibleTrigger className="flex h-10 w-full items-center justify-between px-6 hover:bg-muted/50">
-        <h3 className="font-medium text-sm">{title}</h3>
-        <ChevronDown
+    <Collapsible className={cn("mt-2", className)} onOpenChange={setIsOpen} open={isOpen}>
+      <CollapsibleTrigger className="group flex h-9 w-full items-center gap-2 border-border/60 border-b bg-muted/40 px-6 transition-colors hover:bg-muted/70">
+        <ChevronRight
           className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform",
-            isOpen && "rotate-180"
+            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            isOpen && "rotate-90"
           )}
         />
+        <h3 className="font-medium text-foreground/80 text-sm">{title}</h3>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className={cn("px-6 pb-4", contentClassName)}>{children}</div>
+        <div className={cn("px-6 py-4", contentClassName)}>{children}</div>
       </CollapsibleContent>
     </Collapsible>
   )

@@ -10,13 +10,13 @@ export function ReviewerCoverSheetView() {
   return (
     <div className="flex flex-col">
       <ViewNavHeader>
-        <ViewNavButton label="Back to Summary" targetView="reviewer-summary" />
         <ViewNavButton label="Back to Journal" targetView="journal" />
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           <Badge className="gap-1" variant="secondary">
             <Eye className="h-3 w-3" />
             Viewing as Reviewer
           </Badge>
+          <ViewNavButton label="View Summary" targetView="reviewer-summary" variant="link" />
         </div>
       </ViewNavHeader>
       <ProgressSummary readonly />

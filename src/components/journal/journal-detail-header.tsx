@@ -9,7 +9,7 @@ const VIEW_LABELS: Record<DetailView, string> = {
   journal: "",
   "preparer-cover-sheet": "Preparer Cover Sheet",
   "reviewer-summary": "Reviewer Summary",
-  "reviewer-cover-sheet": "Preparer Cover Sheet (Read Only)",
+  "reviewer-cover-sheet": "Preparer Cover Sheet (Read-only)",
 }
 
 interface JournalDetailHeaderProps {
@@ -21,7 +21,7 @@ export function JournalDetailHeader({ asset }: JournalDetailHeaderProps) {
   const viewLabel = VIEW_LABELS[detailView]
 
   return (
-    <div className="flex shrink-0 items-center justify-between border-b bg-white px-4 py-3">
+    <div className="flex shrink-0 items-center justify-between border-b bg-background px-4 py-3">
       <div className="flex items-center gap-1">
         <span className="cursor-pointer font-medium text-primary hover:underline">
           {asset.name}

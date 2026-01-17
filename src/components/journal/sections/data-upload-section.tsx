@@ -492,7 +492,7 @@ function AddDataUploadDialog({ onAdd, isLoading }: AddDataUploadDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <label className="font-medium text-sm" htmlFor="upload-name">
               Name <span className="text-destructive">*</span>
             </label>
@@ -505,7 +505,7 @@ function AddDataUploadDialog({ onAdd, isLoading }: AddDataUploadDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <label className="font-medium text-sm" htmlFor="upload-type">
               Type <span className="text-destructive">*</span>
             </label>
@@ -524,7 +524,7 @@ function AddDataUploadDialog({ onAdd, isLoading }: AddDataUploadDialogProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <label className="font-medium text-sm" htmlFor="upload-description">
               Description <span className="text-destructive">*</span>
             </label>
@@ -538,7 +538,7 @@ function AddDataUploadDialog({ onAdd, isLoading }: AddDataUploadDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <p className="font-medium text-sm">
               File <span className="text-muted-foreground text-xs">(optional)</span>
             </p>
@@ -677,7 +677,7 @@ function EditDataUploadDialog({
           <DialogDescription>Update the data upload definition.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <label className="font-medium text-sm" htmlFor="edit-upload-name">
               Name <span className="text-destructive">*</span>
             </label>
@@ -690,7 +690,7 @@ function EditDataUploadDialog({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <label className="font-medium text-sm" htmlFor="edit-upload-type">
               Type <span className="text-destructive">*</span>
             </label>
@@ -709,7 +709,7 @@ function EditDataUploadDialog({
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <label className="font-medium text-sm" htmlFor="edit-upload-description">
               Description <span className="text-destructive">*</span>
             </label>
@@ -723,7 +723,7 @@ function EditDataUploadDialog({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <p className="font-medium text-sm">File</p>
             <FileDropZone
               isUploading={isBusy}

@@ -36,16 +36,16 @@ export function MonthlyTrendChart() {
           data={MONTHLY_DATA}
           margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
         >
-          <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
+          <CartesianGrid stroke="var(--color-border)" strokeOpacity={0.4} vertical={false} />
           <XAxis
             axisLine={false}
             dataKey="month"
-            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }}
             tickLine={false}
           />
           <YAxis
             axisLine={false}
-            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }}
             tickFormatter={(value: number) => `${(value / 1000).toFixed(0)}k`}
             tickLine={false}
             width={32}
@@ -53,19 +53,19 @@ export function MonthlyTrendChart() {
           <Tooltip
             contentStyle={{
               fontSize: 12,
-              backgroundColor: "#ffffff",
-              border: "1px solid #e5e7eb",
+              backgroundColor: "var(--color-popover)",
+              border: "1px solid var(--color-border)",
               borderRadius: 6,
               padding: "8px 12px",
               boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             }}
-            cursor={{ fill: "rgba(0,0,0,0.05)" }}
+            cursor={{ fill: "var(--color-muted)", opacity: 0.3 }}
             formatter={(value, name) => {
               const numValue = typeof value === "number" ? value : 0
               return [`$${numValue.toLocaleString()}`, name]
             }}
-            itemStyle={{ color: "#374151" }}
-            labelStyle={{ fontWeight: 600, marginBottom: 4, color: "#111827" }}
+            itemStyle={{ color: "var(--color-foreground)" }}
+            labelStyle={{ fontWeight: 600, marginBottom: 4, color: "var(--color-foreground)" }}
           />
           <Legend iconSize={10} iconType="square" wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
           {/* Stacked bars: Journal Amount on bottom (darker), GL Amount on top (lighter) */}

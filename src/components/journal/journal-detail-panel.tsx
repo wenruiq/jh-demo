@@ -16,7 +16,7 @@ interface JournalDetailPanelProps {
 function LoadingSkeleton() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center justify-between border-b bg-white px-4 py-3">
+      <div className="flex shrink-0 items-center justify-between border-b bg-background px-4 py-3">
         <Skeleton className="h-5 w-48" />
         <div className="flex items-center gap-2">
           <Skeleton className="h-5 w-20 rounded-full" />

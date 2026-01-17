@@ -1,11 +1,11 @@
-import { ArrowLeft, ExternalLink } from "lucide-react"
+import { ArrowLeft, FileSearch, Undo2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { type DetailView, useJournalStore } from "@/store/journal-store"
 
 interface ViewNavButtonProps {
   targetView: DetailView
   label: string
-  variant?: "back" | "link"
+  variant?: "back" | "view" | "return"
 }
 
 export function ViewNavButton({ targetView, label, variant = "back" }: ViewNavButtonProps) {
@@ -15,11 +15,32 @@ export function ViewNavButton({ targetView, label, variant = "back" }: ViewNavBu
     setDetailView(targetView)
   }
 
-  if (variant === "link") {
+  // "View Submission" style - for viewing preparer's work
+  if (variant === "view") {
     return (
-      <Button className="h-8 gap-1.5 px-3 text-xs" onClick={handleClick} size="sm" variant="ghost">
+      <Button
+        className="h-8 gap-1.5 px-3 text-xs"
+        onClick={handleClick}
+        size="sm"
+        variant="outline"
+      >
+        <FileSearch className="h-3.5 w-3.5" />
         {label}
-        <ExternalLink className="h-3.5 w-3.5" />
+      </Button>
+    )
+  }
+
+  // "Return to Review" style - for going back to reviewer summary
+  if (variant === "return") {
+    return (
+      <Button
+        className="h-8 gap-1.5 px-3 text-xs"
+        onClick={handleClick}
+        size="sm"
+        variant="outline"
+      >
+        <Undo2 className="h-3.5 w-3.5" />
+        {label}
       </Button>
     )
   }

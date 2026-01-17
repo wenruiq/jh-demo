@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/select"
 import { useAssetDetail, useAssets } from "@/hooks/use-assets"
 import { useJournalStore } from "@/store/journal-store"
+import { useThemeStore } from "@/store/theme-store"
 
 function App() {
   const { selectedAssetId, setSelectedAssetId } = useJournalStore()
+  const theme = useThemeStore((state) => state.theme)
 
   // Fetch assets list
   const { data: assetsResponse, isLoading: isLoadingAssets } = useAssets()
@@ -35,7 +37,24 @@ function App() {
 
   return (
     <MainLayout>
-      <Toaster position="top-right" richColors />
+      <Toaster
+        duration={2500}
+        expand={false}
+        position="top-right"
+        theme={theme}
+        toastOptions={{
+          classNames: {
+            toast:
+              "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border group-[.toaster]:border-border group-[.toaster]:shadow-lg group-[.toaster]:rounded-lg",
+            description: "group-[.toast]:text-muted-foreground text-xs",
+            actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+            cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            success:
+              "group-[.toast]:border-success/20 group-[.toast]:bg-success/5 [&_[data-icon]]:text-success",
+            error: "group-[.toast]:border-destructive/20 group-[.toast]:bg-destructive/5",
+          },
+        }}
+      />
       <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-4 py-2">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 text-sm">

@@ -1,4 +1,5 @@
-import { CornerDownRight, MessageCircle } from "lucide-react"
+import { CornerDownRight } from "lucide-react"
+import { ThreadsTab } from "@/components/journal/sections/threads-tab"
 import { SectionContainer } from "@/components/journal/shared/section-container"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -164,12 +165,12 @@ export function ActivitySection() {
           <TabsTrigger className="text-xs" value="history">
             History
           </TabsTrigger>
-          <TabsTrigger className="text-xs" value="enquiry">
-            Review Enquiry
+          <TabsTrigger className="text-xs" value="threads">
+            Threads
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent className="mt-3" value="comments">
+        <TabsContent className="mt-4 pb-16" value="comments">
           <div className="space-y-4">
             {/* Comment input area */}
             <div className="flex gap-3 rounded-lg border-2 border-muted border-dashed p-3">
@@ -214,7 +215,7 @@ export function ActivitySection() {
           </div>
         </TabsContent>
 
-        <TabsContent className="mt-3" value="history">
+        <TabsContent className="mt-5 pb-16" value="history">
           <div className="space-y-4">
             {DEMO_HISTORY.map((item) => (
               <HistoryItem
@@ -228,14 +229,8 @@ export function ActivitySection() {
           </div>
         </TabsContent>
 
-        <TabsContent className="mt-3" value="enquiry">
-          <div className="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-muted border-dashed">
-            <MessageCircle className="mb-2 h-8 w-8 text-muted-foreground/50" />
-            <p className="text-muted-foreground text-sm">No review enquiries yet</p>
-            <Button className="mt-3" size="sm" variant="outline">
-              Start Enquiry
-            </Button>
-          </div>
+        <TabsContent className="mt-3" value="threads">
+          <ThreadsTab />
         </TabsContent>
       </Tabs>
     </SectionContainer>

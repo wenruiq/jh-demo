@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Lightbulb, Loader2, Send, Sparkles, Wand2, X } from "lucide-react"
+import { Check, ChevronDown, Lightbulb, Loader2, Send, Sparkles, Wand2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { MarkdownDisplay } from "@/components/journal/shared/markdown-display"
@@ -22,6 +22,47 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { useAiFindingsStore } from "@/store/ai-findings-store"
+
+// Hook to manage AI panel state - either local (isolated) or from store (shared)
+function useAiPanelState(useLocalState: boolean) {
+  // Local state for isolated panels (Reviewer Agent)
+  const [localPrompt, setLocalPrompt] = useState("")
+  const [localResponse, setLocalResponse] = useState("")
+  const [localIsStreaming, setLocalIsStreaming] = useState(false)
+
+  // Store state (persisted across view changes) - for Preparer panel
+  const store = useAiFindingsStore()
+
+  // No-op function for local state mode (doesn't affect progress/findings)
+  const noop = useCallback(() => undefined, [])
+  const resetLocal = useCallback(() => setLocalResponse(""), [])
+
+  if (useLocalState) {
+    return {
+      prompt: localPrompt,
+      setPrompt: setLocalPrompt,
+      streamedContent: localResponse,
+      setStreamedContent: setLocalResponse,
+      isStreaming: localIsStreaming,
+      setIsStreaming: setLocalIsStreaming,
+      setHasGeneratedResponse: noop,
+      setAdoptedFindings: noop,
+      resetForNewGeneration: resetLocal,
+    }
+  }
+
+  return {
+    prompt: store.currentPrompt,
+    setPrompt: store.setCurrentPrompt,
+    streamedContent: store.currentResponse,
+    setStreamedContent: store.setCurrentResponse,
+    isStreaming: store.isStreaming,
+    setIsStreaming: store.setIsStreaming,
+    setHasGeneratedResponse: store.setHasGeneratedResponse,
+    setAdoptedFindings: store.setAdoptedFindings,
+    resetForNewGeneration: store.resetForNewGeneration,
+  }
+}
 
 const PROMPT_SUGGESTIONS = [
   {
@@ -88,6 +129,8 @@ interface AiPromptPanelProps {
   readonly?: boolean
   promptPlaceholder?: string
   showUseResultButton?: boolean
+  /** When true, uses local state instead of the shared store (for independent panels like Reviewer Agent) */
+  useLocalState?: boolean
 }
 
 export function AiPromptPanel({
@@ -95,6 +138,7 @@ export function AiPromptPanel({
   readonly = false,
   promptPlaceholder = "Ask AI to analyze this journal entry...",
   showUseResultButton = false,
+  useLocalState = false,
 }: AiPromptPanelProps) {
   // Local UI state (not persisted)
   const [isPolishing, setIsPolishing] = useState(false)
@@ -104,28 +148,29 @@ export function AiPromptPanel({
   const [isAdopting, setIsAdopting] = useState(false)
   const streamRef = useRef<number | null>(null)
   const polishStreamRef = useRef<number | null>(null)
+  const responseContainerRef = useRef<HTMLDivElement>(null)
 
-  // Store state (persisted across view changes)
+  // Get state from either local state or store based on prop
   const {
-    currentPrompt: prompt,
-    currentResponse: streamedContent,
+    prompt,
+    setPrompt,
+    streamedContent,
+    setStreamedContent,
     isStreaming,
-    setCurrentPrompt: setPrompt,
-    setCurrentResponse: setStreamedContent,
     setIsStreaming,
     setHasGeneratedResponse,
     setAdoptedFindings,
     resetForNewGeneration,
-  } = useAiFindingsStore()
+  } = useAiPanelState(useLocalState)
 
   // Simulate streaming text character by character
   const simulateStream = useCallback(
-    (fullText: string, setContent: (text: string) => void, onComplete?: () => void, speed = 8) => {
+    (fullText: string, setContent: (text: string) => void, onComplete?: () => void, speed = 2) => {
       let index = 0
       const streamInterval = setInterval(() => {
         if (index < fullText.length) {
-          // Stream in chunks of 1-3 characters for natural feel
-          const chunkSize = Math.min(Math.floor(Math.random() * 3) + 1, fullText.length - index)
+          // Stream in chunks of 3-8 characters for faster, natural feel
+          const chunkSize = Math.min(Math.floor(Math.random() * 6) + 3, fullText.length - index)
           index += chunkSize
           setContent(fullText.slice(0, index))
         } else {
@@ -150,6 +195,14 @@ export function AiPromptPanel({
     }
   }, [])
 
+  // Auto-scroll to bottom as content streams in
+  useEffect(() => {
+    const container = responseContainerRef.current
+    if (isStreaming && container && streamedContent) {
+      container.scrollTop = container.scrollHeight
+    }
+  }, [isStreaming, streamedContent])
+
   const handleGenerateResponse = useCallback(() => {
     if (!prompt.trim() || isStreaming) {
       return
@@ -159,19 +212,17 @@ export function AiPromptPanel({
     setIsStreaming(true)
     resetForNewGeneration()
 
-    // Add a slight delay before streaming starts
-    setTimeout(() => {
-      const intervalId = simulateStream(
-        MOCK_AI_RESPONSE_TEMPLATE,
-        setStreamedContent,
-        () => {
-          setIsStreaming(false)
-          setHasGeneratedResponse(true)
-        },
-        6
-      )
-      streamRef.current = intervalId as unknown as number
-    }, 300)
+    // Start streaming immediately with faster speed
+    const intervalId = simulateStream(
+      MOCK_AI_RESPONSE_TEMPLATE,
+      setStreamedContent,
+      () => {
+        setIsStreaming(false)
+        setHasGeneratedResponse(true)
+      },
+      2
+    )
+    streamRef.current = intervalId as unknown as number
   }, [
     prompt,
     isStreaming,
@@ -252,9 +303,7 @@ export function AiPromptPanel({
         generatedAt: new Date(),
       })
       setIsAdopting(false)
-      toast.success("Findings adopted successfully", {
-        description: "Key findings section has been updated with the AI analysis.",
-      })
+      toast.success("Findings adopted")
     }, 600)
   }, [streamedContent, isStreaming, isAdopting, setAdoptedFindings])
 
@@ -365,6 +414,7 @@ export function AiPromptPanel({
               "flex-1 overflow-y-auto rounded-md border bg-muted/20 p-4",
               isStreaming && "relative"
             )}
+            ref={responseContainerRef}
           >
             {hasContent ? (
               <div className="relative">
@@ -439,11 +489,9 @@ export function AiPromptPanel({
 
           <DialogFooter>
             <Button onClick={handleRejectPolish} size="sm" variant="ghost">
-              <X className="mr-1.5 h-3.5 w-3.5" />
               Keep Original
             </Button>
             <Button disabled={isPolishing} onClick={handleAcceptPolish} size="sm">
-              <Check className="mr-1.5 h-3.5 w-3.5" />
               Use Polished
             </Button>
           </DialogFooter>

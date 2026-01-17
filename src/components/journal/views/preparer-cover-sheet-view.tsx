@@ -8,7 +8,7 @@ export function PreparerCoverSheetView() {
   return (
     <div className="flex flex-col">
       <ViewNavHeader>
-        <ViewNavButton label="Back to Journal" targetView="journal" />
+        <ViewNavButton label="Back to Entry" targetView="journal" />
       </ViewNavHeader>
       <ProgressSummary />
       <DataUploadSection />

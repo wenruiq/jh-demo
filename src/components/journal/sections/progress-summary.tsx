@@ -1,4 +1,5 @@
 import { CheckCircle2, Clock, FileText } from "lucide-react"
+import { useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { useDataUploadStore } from "@/store/data-upload-store"
 import { useJournalStore } from "@/store/journal-store"
@@ -37,13 +38,22 @@ function ProgressCard({ icon, label, value, description, variant = "default" }: 
 
 function useDataUploadProgress() {
   const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
-  const getUploadsForAsset = useDataUploadStore((state) => state.getUploadsForAsset)
+  // Subscribe to the entire uploadsByAssetId to detect changes
+  const uploadsByAssetId = useDataUploadStore((state) => state.uploadsByAssetId)
+  const initializeAsset = useDataUploadStore((state) => state.initializeAsset)
+
+  // Initialize asset uploads on mount/asset change
+  useEffect(() => {
+    if (selectedAssetId) {
+      initializeAsset(selectedAssetId)
+    }
+  }, [selectedAssetId, initializeAsset])
 
   if (!selectedAssetId) {
     return { uploaded: 0, total: 0 }
   }
 
-  const uploads = getUploadsForAsset(selectedAssetId)
+  const uploads = uploadsByAssetId[selectedAssetId] ?? []
   const total = uploads.length
   const uploaded = uploads.filter((u) => u.fileName).length
 

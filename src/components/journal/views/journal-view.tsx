@@ -13,7 +13,7 @@ interface JournalViewProps {
 export function JournalView({ asset }: JournalViewProps) {
   return (
     <div className="flex flex-col">
-      <div className="space-y-3 border-b px-6 py-4">
+      <div className="space-y-3 px-6 py-4">
         <StatusFlow asset={asset} />
         <StatusActions asset={asset} />
       </div>

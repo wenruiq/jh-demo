@@ -17,14 +17,28 @@ export interface DataUpload {
   uploadedAt?: string
 }
 
+interface LoadingState {
+  addUpload: boolean
+  deleteUpload: string | null // uploadId being deleted
+  uploadFile: string | null // uploadId being uploaded to
+  deleteFile: string | null // uploadId whose file is being deleted
+  updateUpload: string | null // uploadId being updated
+}
+
 interface DataUploadStore {
   uploadsByAssetId: Record<string, DataUpload[]>
+  loading: LoadingState
   getUploadsForAsset: (assetId: string) => DataUpload[]
-  addUpload: (assetId: string, upload: Omit<DataUpload, "id">) => void
-  updateUpload: (assetId: string, uploadId: string, updates: Partial<DataUpload>) => void
-  deleteUpload: (assetId: string, uploadId: string) => void
-  uploadFile: (assetId: string, uploadId: string, fileName: string) => void
-  removeFile: (assetId: string, uploadId: string) => void
+  initializeAsset: (assetId: string) => void
+  addUpload: (assetId: string, upload: Omit<DataUpload, "id">) => Promise<void>
+  updateUpload: (
+    assetId: string,
+    uploadId: string,
+    updates: Partial<Omit<DataUpload, "id">>
+  ) => Promise<void>
+  deleteUpload: (assetId: string, uploadId: string) => Promise<void>
+  uploadFile: (assetId: string, uploadId: string, fileName: string) => Promise<void>
+  removeFile: (assetId: string, uploadId: string) => Promise<void>
 }
 
 function generateId(): string {
@@ -53,12 +67,35 @@ function getDefaultUploads(): DataUpload[] {
   ]
 }
 
+// Simulate API delay for demo realism
+const simulateApiDelay = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
   uploadsByAssetId: {},
+  loading: {
+    addUpload: false,
+    deleteUpload: null,
+    uploadFile: null,
+    deleteFile: null,
+    updateUpload: null,
+  },
+
+  initializeAsset: (assetId: string) => {
+    const uploads = get().uploadsByAssetId[assetId]
+    if (!uploads) {
+      set((state) => ({
+        uploadsByAssetId: {
+          ...state.uploadsByAssetId,
+          [assetId]: getDefaultUploads(),
+        },
+      }))
+    }
+  },
 
   getUploadsForAsset: (assetId: string) => {
     const uploads = get().uploadsByAssetId[assetId]
     if (!uploads) {
+      // Initialize synchronously for first access
       const defaultUploads = getDefaultUploads()
       set((state) => ({
         uploadsByAssetId: {
@@ -71,7 +108,11 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
     return uploads
   },
 
-  addUpload: (assetId: string, upload: Omit<DataUpload, "id">) => {
+  addUpload: async (assetId: string, upload: Omit<DataUpload, "id">) => {
+    set((state) => ({ loading: { ...state.loading, addUpload: true } }))
+
+    await simulateApiDelay(600)
+
     const newUpload: DataUpload = {
       ...upload,
       id: generateId(),
@@ -83,11 +124,20 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
           ...state.uploadsByAssetId,
           [assetId]: [...existingUploads, newUpload],
         },
+        loading: { ...state.loading, addUpload: false },
       }
     })
   },
 
-  updateUpload: (assetId: string, uploadId: string, updates: Partial<DataUpload>) => {
+  updateUpload: async (
+    assetId: string,
+    uploadId: string,
+    updates: Partial<Omit<DataUpload, "id">>
+  ) => {
+    set((state) => ({ loading: { ...state.loading, updateUpload: uploadId } }))
+
+    await simulateApiDelay(500)
+
     set((state) => {
       const existingUploads = state.uploadsByAssetId[assetId] ?? []
       return {
@@ -95,11 +145,16 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
           ...state.uploadsByAssetId,
           [assetId]: existingUploads.map((u) => (u.id === uploadId ? { ...u, ...updates } : u)),
         },
+        loading: { ...state.loading, updateUpload: null },
       }
     })
   },
 
-  deleteUpload: (assetId: string, uploadId: string) => {
+  deleteUpload: async (assetId: string, uploadId: string) => {
+    set((state) => ({ loading: { ...state.loading, deleteUpload: uploadId } }))
+
+    await simulateApiDelay(500)
+
     set((state) => {
       const existingUploads = state.uploadsByAssetId[assetId] ?? []
       return {
@@ -107,11 +162,17 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
           ...state.uploadsByAssetId,
           [assetId]: existingUploads.filter((u) => u.id !== uploadId),
         },
+        loading: { ...state.loading, deleteUpload: null },
       }
     })
   },
 
-  uploadFile: (assetId: string, uploadId: string, fileName: string) => {
+  uploadFile: async (assetId: string, uploadId: string, fileName: string) => {
+    set((state) => ({ loading: { ...state.loading, uploadFile: uploadId } }))
+
+    // Longer delay for file upload simulation
+    await simulateApiDelay(1200)
+
     set((state) => {
       const existingUploads = state.uploadsByAssetId[assetId] ?? []
       return {
@@ -121,11 +182,16 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
             u.id === uploadId ? { ...u, fileName, uploadedAt: new Date().toISOString() } : u
           ),
         },
+        loading: { ...state.loading, uploadFile: null },
       }
     })
   },
 
-  removeFile: (assetId: string, uploadId: string) => {
+  removeFile: async (assetId: string, uploadId: string) => {
+    set((state) => ({ loading: { ...state.loading, deleteFile: uploadId } }))
+
+    await simulateApiDelay(400)
+
     set((state) => {
       const existingUploads = state.uploadsByAssetId[assetId] ?? []
       return {
@@ -135,6 +201,7 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
             u.id === uploadId ? { ...u, fileName: undefined, uploadedAt: undefined } : u
           ),
         },
+        loading: { ...state.loading, deleteFile: null },
       }
     })
   },

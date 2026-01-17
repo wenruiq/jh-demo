@@ -1,5 +1,15 @@
-import { CloudUpload, Database, FileSpreadsheet, FileText, Plus, Trash2 } from "lucide-react"
-import { useCallback, useState } from "react"
+import {
+  CloudUpload,
+  Download,
+  Edit2,
+  FileText,
+  Loader2,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
 import { SectionContainer } from "@/components/journal/shared/section-container"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +22,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -30,82 +47,112 @@ interface DataUploadSectionProps {
 
 export function DataUploadSection({ readonly = false }: DataUploadSectionProps) {
   const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
-  const { getUploadsForAsset, addUpload, deleteUpload, uploadFile } = useDataUploadStore()
+  const uploadsByAssetId = useDataUploadStore((state) => state.uploadsByAssetId)
+  const initializeAsset = useDataUploadStore((state) => state.initializeAsset)
+  const addUpload = useDataUploadStore((state) => state.addUpload)
+  const updateUpload = useDataUploadStore((state) => state.updateUpload)
+  const deleteUpload = useDataUploadStore((state) => state.deleteUpload)
+  const uploadFile = useDataUploadStore((state) => state.uploadFile)
+  const removeFile = useDataUploadStore((state) => state.removeFile)
+  const loading = useDataUploadStore((state) => state.loading)
 
-  const uploads = selectedAssetId ? getUploadsForAsset(selectedAssetId) : []
-
-  const handleAddUpload = (data: Omit<DataUpload, "id">) => {
+  useEffect(() => {
     if (selectedAssetId) {
-      addUpload(selectedAssetId, data)
+      initializeAsset(selectedAssetId)
+    }
+  }, [selectedAssetId, initializeAsset])
+
+  const uploads = selectedAssetId ? (uploadsByAssetId[selectedAssetId] ?? []) : []
+
+  const handleAddUpload = async (data: Omit<DataUpload, "id">) => {
+    if (selectedAssetId) {
+      await addUpload(selectedAssetId, data)
     }
   }
 
-  const handleDelete = (uploadId: string) => {
+  const handleUpdateUpload = async (uploadId: string, updates: Partial<Omit<DataUpload, "id">>) => {
     if (selectedAssetId) {
-      deleteUpload(selectedAssetId, uploadId)
+      await updateUpload(selectedAssetId, uploadId, updates)
     }
   }
 
-  const handleFileUpload = (uploadId: string, fileName: string) => {
+  const handleDelete = async (uploadId: string) => {
     if (selectedAssetId) {
-      uploadFile(selectedAssetId, uploadId, fileName)
+      await deleteUpload(selectedAssetId, uploadId)
+    }
+  }
+
+  const handleFileUpload = async (uploadId: string, fileName: string) => {
+    if (selectedAssetId) {
+      await uploadFile(selectedAssetId, uploadId, fileName)
+    }
+  }
+
+  const handleRemoveFile = async (uploadId: string) => {
+    if (selectedAssetId) {
+      await removeFile(selectedAssetId, uploadId)
     }
   }
 
   return (
-    <SectionContainer title="Data Upload">
-      <div className="space-y-3">
-        {!readonly && (
-          <div className="flex justify-end">
-            <AddDataUploadDialog onAdd={handleAddUpload} />
-          </div>
-        )}
-
-        <div className="max-h-[280px] overflow-y-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-              <tr className="border-b">
-                <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">Name</th>
-                <th className="w-[160px] px-3 py-2.5 text-left font-medium text-muted-foreground">
-                  Type
+    <SectionContainer
+      headerAction={
+        !readonly && <AddDataUploadDialog isLoading={loading.addUpload} onAdd={handleAddUpload} />
+      }
+      title="Data Upload"
+    >
+      <div className="max-h-[280px] overflow-y-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+            <tr className="border-b">
+              <th className="w-[160px] px-3 py-2.5 text-left font-medium text-muted-foreground">
+                Name
+              </th>
+              <th className="w-[200px] px-3 py-2.5 text-left font-medium text-muted-foreground">
+                Type
+              </th>
+              <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">
+                Description
+              </th>
+              <th className="w-[180px] px-3 py-2.5 text-left font-medium text-muted-foreground">
+                Preview
+              </th>
+              {!readonly && (
+                <th className="w-[48px] px-3 py-2.5 text-left font-medium text-muted-foreground">
+                  <span className="sr-only">Actions</span>
                 </th>
-                <th className="w-[200px] px-3 py-2.5 text-left font-medium text-muted-foreground">
-                  Description
-                </th>
-                <th className="w-[180px] px-3 py-2.5 text-left font-medium text-muted-foreground">
-                  Preview
-                </th>
-                {!readonly && (
-                  <th className="w-[60px] px-3 py-2.5 text-left font-medium text-muted-foreground">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {uploads.length === 0 ? (
-                <tr>
-                  <td
-                    className="px-3 py-8 text-center text-muted-foreground"
-                    colSpan={readonly ? 4 : 5}
-                  >
-                    No data uploads defined. Click "Add Data Upload" to get started.
-                  </td>
-                </tr>
-              ) : (
-                uploads.map((upload) => (
-                  <DataUploadRow
-                    key={upload.id}
-                    onDelete={() => handleDelete(upload.id)}
-                    onFileUpload={(fileName) => handleFileUpload(upload.id, fileName)}
-                    readonly={readonly}
-                    upload={upload}
-                  />
-                ))
               )}
-            </tbody>
-          </table>
-        </div>
+            </tr>
+          </thead>
+          <tbody>
+            {uploads.length === 0 ? (
+              <tr>
+                <td
+                  className="px-3 py-8 text-center text-muted-foreground"
+                  colSpan={readonly ? 4 : 5}
+                >
+                  No data uploads defined. Click "Add" to get started.
+                </td>
+              </tr>
+            ) : (
+              uploads.map((upload) => (
+                <DataUploadRow
+                  isDeleting={loading.deleteUpload === upload.id}
+                  isDeletingFile={loading.deleteFile === upload.id}
+                  isUpdating={loading.updateUpload === upload.id}
+                  isUploadingFile={loading.uploadFile === upload.id}
+                  key={upload.id}
+                  onDelete={() => handleDelete(upload.id)}
+                  onFileUpload={(fileName) => handleFileUpload(upload.id, fileName)}
+                  onRemoveFile={() => handleRemoveFile(upload.id)}
+                  onUpdate={(updates) => handleUpdateUpload(upload.id, updates)}
+                  readonly={readonly}
+                  upload={upload}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </SectionContainer>
   )
@@ -114,23 +161,57 @@ export function DataUploadSection({ readonly = false }: DataUploadSectionProps) 
 interface DataUploadRowProps {
   upload: DataUpload
   readonly: boolean
-  onDelete: () => void
-  onFileUpload: (fileName: string) => void
+  isDeleting: boolean
+  isUploadingFile: boolean
+  isDeletingFile: boolean
+  isUpdating: boolean
+  onDelete: () => Promise<void>
+  onFileUpload: (fileName: string) => Promise<void>
+  onRemoveFile: () => Promise<void>
+  onUpdate: (updates: Partial<Omit<DataUpload, "id">>) => Promise<void>
 }
 
-function DataUploadRow({ upload, readonly, onDelete, onFileUpload }: DataUploadRowProps) {
+function DataUploadRow({
+  upload,
+  readonly,
+  isDeleting,
+  isUploadingFile,
+  isDeletingFile,
+  isUpdating,
+  onDelete,
+  onFileUpload,
+  onRemoveFile,
+  onUpdate,
+}: DataUploadRowProps) {
   const [showFileDialog, setShowFileDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  const handleDeleteConfirm = async () => {
+    await onDelete()
+    setShowDeleteConfirm(false)
+  }
+
+  const isRowBusy = isDeleting || isUploadingFile || isDeletingFile || isUpdating
 
   return (
-    <tr className="border-b last:border-0 hover:bg-muted/30">
+    <tr
+      className={cn(
+        "border-b last:border-0 hover:bg-muted/30",
+        isRowBusy && "pointer-events-none opacity-60"
+      )}
+    >
       <td className="px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <TypeIcon type={upload.type} />
-          <span className="font-medium">{upload.name}</span>
+          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="truncate font-medium" title={upload.name}>
+            {upload.name}
+          </span>
+          {isUpdating && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
         </div>
       </td>
       <td className="px-3 py-2.5">
-        <TypeBadge type={upload.type} />
+        <span className="text-muted-foreground text-xs">{upload.type}</span>
       </td>
       <td className="px-3 py-2.5">
         <p className="line-clamp-2 text-muted-foreground" title={upload.description}>
@@ -140,7 +221,10 @@ function DataUploadRow({ upload, readonly, onDelete, onFileUpload }: DataUploadR
       <td className="px-3 py-2.5">
         <PreviewCell
           fileName={upload.fileName}
+          isDeletingFile={isDeletingFile}
+          isUploadingFile={isUploadingFile}
           onFileUpload={onFileUpload}
+          onRemoveFile={onRemoveFile}
           readonly={readonly}
           setShowFileDialog={setShowFileDialog}
           showFileDialog={showFileDialog}
@@ -149,14 +233,68 @@ function DataUploadRow({ upload, readonly, onDelete, onFileUpload }: DataUploadR
       </td>
       {!readonly && (
         <td className="px-3 py-2.5">
-          <Button
-            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-            onClick={onDelete}
-            size="icon"
-            variant="ghost"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="h-7 w-7 text-muted-foreground"
+                disabled={isRowBusy}
+                size="icon"
+                variant="ghost"
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <MoreHorizontal className="h-4 w-4" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                <Edit2 className="h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} variant="destructive">
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Edit Dialog */}
+          <EditDataUploadDialog
+            isLoading={isUpdating}
+            isUploadingFile={isUploadingFile}
+            onFileUpload={onFileUpload}
+            onOpenChange={setShowEditDialog}
+            onRemoveFile={onRemoveFile}
+            onUpdate={onUpdate}
+            open={showEditDialog}
+            upload={upload}
+          />
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog onOpenChange={setShowDeleteConfirm} open={showDeleteConfirm}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete Data Upload</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete "{upload.name}"? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button disabled={isDeleting} variant="outline">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button disabled={isDeleting} onClick={handleDeleteConfirm} variant="destructive">
+                  {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </td>
       )}
     </tr>
@@ -169,7 +307,10 @@ interface PreviewCellProps {
   uploadName: string
   showFileDialog: boolean
   setShowFileDialog: (show: boolean) => void
-  onFileUpload: (fileName: string) => void
+  onFileUpload: (fileName: string) => Promise<void>
+  onRemoveFile: () => Promise<void>
+  isUploadingFile: boolean
+  isDeletingFile: boolean
 }
 
 function PreviewCell({
@@ -179,28 +320,96 @@ function PreviewCell({
   showFileDialog,
   setShowFileDialog,
   onFileUpload,
+  onRemoveFile,
+  isUploadingFile,
+  isDeletingFile,
 }: PreviewCellProps) {
+  const [showDeleteFileConfirm, setShowDeleteFileConfirm] = useState(false)
+
+  const handleDeleteFile = async () => {
+    await onRemoveFile()
+    setShowDeleteFileConfirm(false)
+  }
+
   if (fileName) {
     return (
       <div className="flex items-center gap-1.5">
-        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        <span className="truncate text-xs" title={fileName}>
+        <Download className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <button
+          className="flex-1 truncate text-left text-primary text-xs underline-offset-2 hover:underline"
+          onClick={(e) => e.preventDefault()}
+          title={`Download ${fileName}`}
+          type="button"
+        >
           {fileName}
-        </span>
+        </button>
+        {!readonly && (
+          <>
+            <Button
+              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+              disabled={isDeletingFile}
+              onClick={() => setShowDeleteFileConfirm(true)}
+              size="icon"
+              variant="ghost"
+            >
+              {isDeletingFile ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <X className="h-3 w-3" />
+              )}
+            </Button>
+
+            {/* Delete File Confirmation */}
+            <Dialog onOpenChange={setShowDeleteFileConfirm} open={showDeleteFileConfirm}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Remove File</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to remove "{fileName}"? You can upload a new file later.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button disabled={isDeletingFile} variant="outline">
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <Button
+                    disabled={isDeletingFile}
+                    onClick={handleDeleteFile}
+                    variant="destructive"
+                  >
+                    {isDeletingFile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Remove
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </div>
     )
   }
 
   if (readonly) {
-    return <span className="text-muted-foreground text-xs">No file</span>
+    return <span className="text-muted-foreground text-xs italic">No file</span>
   }
 
   return (
     <Dialog onOpenChange={setShowFileDialog} open={showFileDialog}>
       <DialogTrigger asChild>
-        <Button className="h-7 gap-1 px-2 text-xs" size="sm" variant="outline">
-          <CloudUpload className="h-3 w-3" />
-          Upload
+        <Button
+          className="h-7 gap-1 px-2 text-xs"
+          disabled={isUploadingFile}
+          size="sm"
+          variant="outline"
+        >
+          {isUploadingFile ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <CloudUpload className="h-3 w-3" />
+          )}
+          {isUploadingFile ? "Uploading..." : "Upload"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -209,8 +418,9 @@ function PreviewCell({
           <DialogDescription>Upload a file for "{uploadName}"</DialogDescription>
         </DialogHeader>
         <FileDropZone
-          onFileSelect={(name) => {
-            onFileUpload(name)
+          isUploading={isUploadingFile}
+          onFileSelect={async (name) => {
+            await onFileUpload(name)
             setShowFileDialog(false)
           }}
         />
@@ -219,44 +429,12 @@ function PreviewCell({
   )
 }
 
-function TypeIcon({ type }: { type: DataUploadType }) {
-  switch (type) {
-    case "Supporting Data (System)":
-      return <Database className="h-4 w-4 text-blue-600" />
-    case "Automation File":
-      return <FileSpreadsheet className="h-4 w-4 text-green-600" />
-    default:
-      return <FileText className="h-4 w-4 text-orange-600" />
-  }
-}
-
-function TypeBadge({ type }: { type: DataUploadType }) {
-  const styles = {
-    "Supporting Data (System)": "bg-blue-50 text-blue-700 border-blue-200",
-    "Automation File": "bg-green-50 text-green-700 border-green-200",
-    "Supporting Data (Manual)": "bg-orange-50 text-orange-700 border-orange-200",
-  }
-
-  const shortLabels = {
-    "Supporting Data (System)": "System",
-    "Automation File": "Automation",
-    "Supporting Data (Manual)": "Manual",
-  }
-
-  return (
-    <span
-      className={cn("inline-flex rounded-md border px-2 py-0.5 font-medium text-xs", styles[type])}
-    >
-      {shortLabels[type]}
-    </span>
-  )
-}
-
 interface AddDataUploadDialogProps {
-  onAdd: (data: Omit<DataUpload, "id">) => void
+  onAdd: (data: Omit<DataUpload, "id">) => Promise<void>
+  isLoading: boolean
 }
 
-function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
+function AddDataUploadDialog({ onAdd, isLoading }: AddDataUploadDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [type, setType] = useState<DataUploadType>("Supporting Data (Manual)")
@@ -265,12 +443,12 @@ function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
 
   const isValid = name.trim() && description.trim()
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid) {
       return
     }
 
-    onAdd({
+    await onAdd({
       name: name.trim(),
       type,
       description: description.trim(),
@@ -286,6 +464,9 @@ function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
   }
 
   const handleOpenChange = (newOpen: boolean) => {
+    if (isLoading) {
+      return
+    }
     setOpen(newOpen)
     if (!newOpen) {
       setName("")
@@ -298,9 +479,9 @@ function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogTrigger asChild>
-        <Button className="gap-1.5" size="sm">
-          <Plus className="h-4 w-4" />
-          Add Data Upload
+        <Button className="h-7 gap-1.5 px-2.5 text-xs" size="sm" variant="outline">
+          <Plus className="h-3.5 w-3.5" />
+          Requirement
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
@@ -316,6 +497,7 @@ function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
               Name <span className="text-destructive">*</span>
             </label>
             <Input
+              disabled={isLoading}
               id="upload-name"
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Monthly Payroll Report"
@@ -327,7 +509,11 @@ function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
             <label className="font-medium text-sm" htmlFor="upload-type">
               Type <span className="text-destructive">*</span>
             </label>
-            <Select onValueChange={(v) => setType(v as DataUploadType)} value={type}>
+            <Select
+              disabled={isLoading}
+              onValueChange={(v) => setType(v as DataUploadType)}
+              value={type}
+            >
               <SelectTrigger id="upload-type">
                 <SelectValue />
               </SelectTrigger>
@@ -344,6 +530,7 @@ function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
             </label>
             <textarea
               className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isLoading}
               id="upload-description"
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of what this data upload contains..."
@@ -355,14 +542,21 @@ function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
             <p className="font-medium text-sm">
               File <span className="text-muted-foreground text-xs">(optional)</span>
             </p>
-            <FileDropZone onFileSelect={setFileName} selectedFile={fileName} />
+            <FileDropZone
+              isUploading={isLoading}
+              onFileSelect={setFileName}
+              selectedFile={fileName}
+            />
           </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button disabled={isLoading} variant="outline">
+              Cancel
+            </Button>
           </DialogClose>
-          <Button disabled={!isValid} onClick={handleSubmit}>
+          <Button disabled={!isValid || isLoading} onClick={handleSubmit}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Add Upload
           </Button>
         </DialogFooter>
@@ -371,12 +565,196 @@ function AddDataUploadDialog({ onAdd }: AddDataUploadDialogProps) {
   )
 }
 
-interface FileDropZoneProps {
-  onFileSelect: (fileName: string) => void
-  selectedFile?: string
+interface EditDataUploadDialogProps {
+  upload: DataUpload
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onUpdate: (updates: Partial<Omit<DataUpload, "id">>) => Promise<void>
+  onFileUpload: (fileName: string) => Promise<void>
+  onRemoveFile: () => Promise<void>
+  isLoading: boolean
+  isUploadingFile: boolean
 }
 
-function FileDropZone({ onFileSelect, selectedFile }: FileDropZoneProps) {
+function EditDataUploadDialog({
+  upload,
+  open,
+  onOpenChange,
+  onUpdate,
+  onFileUpload,
+  onRemoveFile,
+  isLoading,
+  isUploadingFile,
+}: EditDataUploadDialogProps) {
+  const [name, setName] = useState(upload.name)
+  const [type, setType] = useState<DataUploadType>(upload.type)
+  const [description, setDescription] = useState(upload.description)
+  const [pendingFileName, setPendingFileName] = useState<string | undefined>(upload.fileName)
+
+  // Reset form when upload changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      setName(upload.name)
+      setType(upload.type)
+      setDescription(upload.description)
+      setPendingFileName(upload.fileName)
+    }
+  }, [open, upload])
+
+  const isValid = name.trim() && description.trim()
+  const hasMetadataChanges =
+    name.trim() !== upload.name || type !== upload.type || description.trim() !== upload.description
+  const hasFileChanges = pendingFileName !== upload.fileName
+
+  const handleSubmit = async () => {
+    if (!isValid) {
+      return
+    }
+
+    // Update metadata if changed
+    if (hasMetadataChanges) {
+      await onUpdate({
+        name: name.trim(),
+        type,
+        description: description.trim(),
+      })
+    }
+
+    // Handle file changes
+    if (hasFileChanges) {
+      if (pendingFileName && !upload.fileName) {
+        // New file upload
+        await onFileUpload(pendingFileName)
+      } else if (!pendingFileName && upload.fileName) {
+        // File removed
+        await onRemoveFile()
+      } else if (pendingFileName && upload.fileName && pendingFileName !== upload.fileName) {
+        // File replaced
+        await onRemoveFile()
+        await onFileUpload(pendingFileName)
+      }
+    }
+
+    onOpenChange(false)
+  }
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isLoading || isUploadingFile) {
+      return
+    }
+    onOpenChange(newOpen)
+  }
+
+  // Don't allow editing system types
+  if (upload.type === "Supporting Data (System)") {
+    return (
+      <Dialog onOpenChange={handleOpenChange} open={open}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cannot Edit System Data</DialogTitle>
+            <DialogDescription>
+              System data uploads are automatically managed and cannot be edited.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  const isBusy = isLoading || isUploadingFile
+  const canSave = isValid && (hasMetadataChanges || hasFileChanges)
+
+  return (
+    <Dialog onOpenChange={handleOpenChange} open={open}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Edit Data Upload</DialogTitle>
+          <DialogDescription>Update the data upload definition.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <label className="font-medium text-sm" htmlFor="edit-upload-name">
+              Name <span className="text-destructive">*</span>
+            </label>
+            <Input
+              disabled={isBusy}
+              id="edit-upload-name"
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Monthly Payroll Report"
+              value={name}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="font-medium text-sm" htmlFor="edit-upload-type">
+              Type <span className="text-destructive">*</span>
+            </label>
+            <Select
+              disabled={isBusy}
+              onValueChange={(v) => setType(v as DataUploadType)}
+              value={type}
+            >
+              <SelectTrigger id="edit-upload-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Supporting Data (Manual)">Supporting Data (Manual)</SelectItem>
+                <SelectItem value="Automation File">Automation File</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="font-medium text-sm" htmlFor="edit-upload-description">
+              Description <span className="text-destructive">*</span>
+            </label>
+            <textarea
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isBusy}
+              id="edit-upload-description"
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of what this data upload contains..."
+              value={description}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <p className="font-medium text-sm">File</p>
+            <FileDropZone
+              isUploading={isBusy}
+              onFileSelect={setPendingFileName}
+              selectedFile={pendingFileName}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button disabled={isBusy} variant="outline">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button disabled={!canSave || isBusy} onClick={handleSubmit}>
+            {isBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+interface FileDropZoneProps {
+  onFileSelect: (fileName: string) => void | Promise<void>
+  selectedFile?: string
+  isUploading?: boolean
+}
+
+function FileDropZone({ onFileSelect, selectedFile, isUploading }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -394,21 +772,21 @@ function FileDropZone({ onFileSelect, selectedFile }: FileDropZoneProps) {
       e.preventDefault()
       setIsDragging(false)
       const file = e.dataTransfer.files[0]
-      if (file) {
+      if (file && !isUploading) {
         onFileSelect(file.name)
       }
     },
-    [onFileSelect]
+    [onFileSelect, isUploading]
   )
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
-      if (file) {
+      if (file && !isUploading) {
         onFileSelect(file.name)
       }
     },
-    [onFileSelect]
+    [onFileSelect, isUploading]
   )
 
   if (selectedFile) {
@@ -418,6 +796,7 @@ function FileDropZone({ onFileSelect, selectedFile }: FileDropZoneProps) {
         <span className="flex-1 truncate text-sm">{selectedFile}</span>
         <Button
           className="h-7 px-2 text-xs"
+          disabled={isUploading}
           onClick={() => onFileSelect("")}
           size="sm"
           variant="ghost"
@@ -436,6 +815,7 @@ function FileDropZone({ onFileSelect, selectedFile }: FileDropZoneProps) {
     <div
       className={cn(
         "relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 transition-colors",
+        isUploading && "pointer-events-none opacity-50",
         isDragging
           ? "border-primary bg-primary/5"
           : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30"
@@ -444,16 +824,28 @@ function FileDropZone({ onFileSelect, selectedFile }: FileDropZoneProps) {
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <CloudUpload
-        className={cn("h-8 w-8", isDragging ? "text-primary" : "text-muted-foreground")}
-      />
+      {isUploading ? (
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      ) : (
+        <CloudUpload
+          className={cn("h-8 w-8", isDragging ? "text-primary" : "text-muted-foreground")}
+        />
+      )}
       <div className="text-center">
         <p className="font-medium text-sm">
-          {isDragging ? "Drop file here" : "Drag & drop a file here"}
+          {isUploading && "Uploading..."}
+          {!isUploading && isDragging && "Drop file here"}
+          {!(isUploading || isDragging) && "Drag & drop a file here"}
         </p>
-        <p className="text-muted-foreground text-xs">or click to browse</p>
+        {!isUploading && <p className="text-muted-foreground text-xs">or click to browse</p>}
       </div>
-      <input className="sr-only" id={inputId} onChange={handleFileInput} type="file" />
+      <input
+        className="sr-only"
+        disabled={isUploading}
+        id={inputId}
+        onChange={handleFileInput}
+        type="file"
+      />
       <label className="absolute inset-0 cursor-pointer" htmlFor={inputId}>
         <span className="sr-only">Choose file</span>
       </label>

@@ -21,7 +21,7 @@ export function OverviewSection({ asset }: OverviewSectionProps) {
 
   return (
     <SectionContainer title="Overview">
-      <div className="max-h-[160px] overflow-y-auto">
+      <div className="max-h-[160px] overflow-y-auto rounded-md border border-border/60 bg-muted/20 p-3">
         <MarkdownDisplay content={description} />
       </div>
     </SectionContainer>

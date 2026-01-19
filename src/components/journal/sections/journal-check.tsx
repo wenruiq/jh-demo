@@ -3,6 +3,7 @@ import {
   Check,
   ClipboardCheck,
   Filter,
+  Info,
   Loader2,
   Plus,
   RotateCcw,
@@ -33,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import {
   ASSERTIONS,
@@ -1167,11 +1169,26 @@ export function JournalCheck({ readonly = false }: JournalCheckProps) {
 
           {/* Footer */}
           <div className="border-t px-3 py-1.5">
-            <p className="text-[11px] text-muted-foreground">
-              {pendingCount > 0
-                ? `${pendingCount} check${pendingCount !== 1 ? "s" : ""} pending`
-                : "All checks completed"}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-[11px] text-muted-foreground">
+                {pendingCount > 0
+                  ? `${pendingCount} check${pendingCount !== 1 ? "s" : ""} pending`
+                  : "All checks completed"}
+              </p>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 cursor-help text-muted-foreground/60 hover:text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[220px]" side="top">
+                    <p>
+                      A check is completed when you acknowledge passed results or mark failed checks
+                      as success
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="40" fill="#2563eb"/>
+  <g transform="translate(90, 90)">
+    <path d="M30 -20l-40 40-20-20-20 20" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <polyline points="10 -20 30 -20 30 0" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>

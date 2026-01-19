@@ -337,7 +337,49 @@ function PreviewCell({
         <Download className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         <button
           className="flex-1 truncate text-left text-primary text-xs underline-offset-2 hover:underline"
-          onClick={(e) => e.preventDefault()}
+          onClick={() => {
+            // Simulate download with fake content
+            const extension = fileName.split(".").pop()?.toLowerCase() ?? ""
+            let content: string
+            let mimeType: string
+
+            if (extension === "csv") {
+              content =
+                "Date,Amount,Description\n2024-01-15,1000.00,Sample transaction\n2024-01-16,2500.50,Another entry\n2024-01-17,750.25,Third record"
+              mimeType = "text/csv"
+            } else if (extension === "json") {
+              content = JSON.stringify(
+                {
+                  data: [
+                    { id: 1, value: "Sample" },
+                    { id: 2, value: "Demo" },
+                  ],
+                },
+                null,
+                2
+              )
+              mimeType = "application/json"
+            } else if (extension === "txt") {
+              content = "This is a sample text file for demo purposes.\nGenerated automatically."
+              mimeType = "text/plain"
+            } else if (extension === "xlsx" || extension === "xls") {
+              content = "Date,Amount,Description\n2024-01-15,1000.00,Sample data"
+              mimeType = "text/csv" // Fallback to CSV content for Excel
+            } else {
+              content = `Demo file content for: ${fileName}`
+              mimeType = "application/octet-stream"
+            }
+
+            const blob = new Blob([content], { type: mimeType })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.download = fileName
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(url)
+          }}
           title={`Download ${fileName}`}
           type="button"
         >

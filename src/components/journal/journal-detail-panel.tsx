@@ -1,21 +1,12 @@
 import { FileText, Loader2 } from "lucide-react"
-import { lazy, Suspense } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useJournalStore } from "@/store/journal-store"
 import type { AssetDetail } from "@/types/journal"
 import { JournalDetailHeader } from "./journal-detail-header"
 import { JournalView } from "./views/journal-view"
-
-// Only lazy load secondary views - these are navigated to, not shown on initial load
-const PreparerCoverSheetView = lazy(() =>
-  import("./views/preparer-cover-sheet-view").then((m) => ({ default: m.PreparerCoverSheetView }))
-)
-const ReviewerCoverSheetView = lazy(() =>
-  import("./views/reviewer-cover-sheet-view").then((m) => ({ default: m.ReviewerCoverSheetView }))
-)
-const ReviewerSummaryView = lazy(() =>
-  import("./views/reviewer-summary-view").then((m) => ({ default: m.ReviewerSummaryView }))
-)
+import { PreparerCoverSheetView } from "./views/preparer-cover-sheet-view"
+import { ReviewerCoverSheetView } from "./views/reviewer-cover-sheet-view"
+import { ReviewerSummaryView } from "./views/reviewer-summary-view"
 
 interface JournalDetailPanelProps {
   asset: AssetDetail | null
@@ -62,26 +53,16 @@ function LoadingSkeleton() {
 function ViewRouter({ asset }: { asset: AssetDetail }) {
   const detailView = useJournalStore((state) => state.detailView)
 
-  // Default view is not lazy loaded - renders immediately
-  if (detailView === "journal") {
-    return <JournalView asset={asset} />
+  switch (detailView) {
+    case "preparer-cover-sheet":
+      return <PreparerCoverSheetView />
+    case "reviewer-summary":
+      return <ReviewerSummaryView />
+    case "reviewer-cover-sheet":
+      return <ReviewerCoverSheetView />
+    default:
+      return <JournalView asset={asset} />
   }
-
-  // Secondary views are lazy loaded - wrap in Suspense
-  const lazyView = (() => {
-    switch (detailView) {
-      case "preparer-cover-sheet":
-        return <PreparerCoverSheetView />
-      case "reviewer-summary":
-        return <ReviewerSummaryView />
-      case "reviewer-cover-sheet":
-        return <ReviewerCoverSheetView />
-      default:
-        return null
-    }
-  })()
-
-  return <Suspense fallback={<ContentSkeleton />}>{lazyView}</Suspense>
 }
 
 export function JournalDetailPanel({ asset, isLoading }: JournalDetailPanelProps) {

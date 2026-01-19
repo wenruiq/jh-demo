@@ -19,6 +19,9 @@ export type ResultStatus = "Pass" | "Failed"
 
 export type CardStatus = "passed" | "warning" | "failed"
 
+// Regex pattern for punctuation detection (top-level for performance)
+const PUNCTUATION_END_PATTERN = /[.!?,;:]$/
+
 export interface QualityCheck {
   id: string
   assertion: Assertion
@@ -49,6 +52,7 @@ interface LoadingState {
 interface DataQualityStore {
   checksByAssetId: Record<string, QualityCheck[]>
   loading: LoadingState
+  thinkingCheckId: string | null
   streamingCheckId: string | null
   streamingContent: string
   getChecksForAsset: (assetId: string) => QualityCheck[]
@@ -199,6 +203,7 @@ export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
     savePrompt: null,
     updateAttestation: null,
   },
+  thinkingCheckId: null,
   streamingCheckId: null,
   streamingContent: "",
 
@@ -412,6 +417,7 @@ export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
 
     set((state) => ({
       loading: { ...state.loading, testAi: checkId },
+      thinkingCheckId: checkId,
       streamingCheckId: checkId,
       streamingContent: "",
     }))
@@ -420,16 +426,37 @@ export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
     const fullResponse = getRandomAiResponse(check.assertion)
     const words = fullResponse.split(" ")
 
-    // Simulate streaming word by word
+    // Initial "thinking" delay - simulates AI processing before responding
+    await simulateApiDelay(1000 + Math.random() * 500)
+
+    // Clear thinking state, start streaming
+    set({ thinkingCheckId: null })
+
+    // Simulate fast streaming word by word (like Gemini Flash)
     for (let i = 0; i < words.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 100))
+      const word = words[i]
+      const progress = i / words.length
+
+      // Fast base delay with slight acceleration
+      const baseDelay = 25 - progress * 10 // 25ms down to 15ms
+
+      // Add slight variability
+      const randomFactor = 0.8 + Math.random() * 0.4
+
+      // Small pause after punctuation
+      const hasPunctuation = PUNCTUATION_END_PATTERN.test(word)
+      const punctuationDelay = hasPunctuation ? 20 + Math.random() * 15 : 0
+
+      const delay = baseDelay * randomFactor + punctuationDelay
+
+      await new Promise((resolve) => setTimeout(resolve, delay))
       set({
         streamingContent: words.slice(0, i + 1).join(" "),
       })
     }
 
-    // Final update with complete result
-    await simulateApiDelay(200)
+    // Brief pause before showing final result
+    await simulateApiDelay(100)
 
     // Randomly determine pass/fail (70% pass, 30% fail for demo variety)
     const randomResult: ResultStatus = Math.random() > 0.3 ? "Pass" : "Failed"

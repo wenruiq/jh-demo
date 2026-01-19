@@ -22,6 +22,7 @@ interface AiCheckDetailProps {
 export function AiCheckDetail({ check, assetId, readonly = false }: AiCheckDetailProps) {
   const mentions = useAvailableMentions()
   const loading = useDataQualityStore((state) => state.loading)
+  const thinkingCheckId = useDataQualityStore((state) => state.thinkingCheckId)
   const streamingCheckId = useDataQualityStore((state) => state.streamingCheckId)
   const streamingContent = useDataQualityStore((state) => state.streamingContent)
   const updatePrompt = useDataQualityStore((state) => state.updatePrompt)
@@ -47,6 +48,7 @@ export function AiCheckDetail({ check, assetId, readonly = false }: AiCheckDetai
     setIsEditing(!check.userResult)
   }, [check.attestation, check.userResult])
 
+  const isThinking = thinkingCheckId === check.id
   const isStreaming = streamingCheckId === check.id
   const isDone = isQualityCheckDone(check)
   const canAcknowledge = check.systemResult === "Pass" && !check.acknowledged
@@ -117,22 +119,40 @@ export function AiCheckDetail({ check, assetId, readonly = false }: AiCheckDetai
         )}
       </div>
 
-      {(displayResult || isStreaming) && (
+      {(displayResult || isStreaming || isThinking) && (
         <div>
           <div className="mb-1.5 flex items-center gap-2">
             <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
               AI Result
             </p>
-            {!isStreaming && (
+            {!(isStreaming || isThinking) && (
               <Badge variant={check.systemResult === "Pass" ? "success" : "destructive-outline"}>
                 {check.systemResult}
               </Badge>
             )}
           </div>
           <div className="rounded-md bg-muted/50 p-3">
-            {displayResult && <MentionEditor mentions={mentions} readonly value={displayResult} />}
-            {isStreaming && (
-              <span className="inline-block h-4 w-0.5 animate-pulse bg-foreground align-middle" />
+            {isThinking ? (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>
+                  Thinking
+                  <span className="inline-flex w-6">
+                    <span className="animate-[pulse_1.4s_ease-in-out_infinite]">.</span>
+                    <span className="animate-[pulse_1.4s_ease-in-out_0.2s_infinite]">.</span>
+                    <span className="animate-[pulse_1.4s_ease-in-out_0.4s_infinite]">.</span>
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <>
+                {displayResult && (
+                  <MentionEditor mentions={mentions} readonly value={displayResult} />
+                )}
+                {isStreaming && (
+                  <span className="inline-block h-4 w-0.5 animate-pulse bg-foreground align-middle" />
+                )}
+              </>
             )}
           </div>
         </div>

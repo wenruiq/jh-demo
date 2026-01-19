@@ -20,6 +20,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  type StreamController,
+  simulateQuickStream,
+  simulateRealisticStream,
+} from "@/lib/stream-simulation"
 import { cn } from "@/lib/utils"
 import { useAiFindingsStore } from "@/store/ai-findings-store"
 
@@ -339,6 +344,90 @@ After thorough review of the submitted journal entry and supporting documentatio
 
 **Reviewer Notes:** The variance analysis and supporting explanations demonstrate appropriate due diligence. No material concerns identified.`
 
+// Extracted component to avoid nested ternary
+function GenerateButtonContent({
+  isThinking,
+  isStreaming,
+}: {
+  isThinking: boolean
+  isStreaming: boolean
+}) {
+  if (isThinking) {
+    return (
+      <>
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Thinking...
+      </>
+    )
+  }
+  if (isStreaming) {
+    return (
+      <>
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Generating...
+      </>
+    )
+  }
+  return (
+    <>
+      <Send className="h-3.5 w-3.5" />
+      Generate
+    </>
+  )
+}
+
+// Animated thinking dots component
+function ThinkingDots() {
+  return (
+    <span className="inline-flex w-6">
+      <span className="animate-[pulse_1.4s_ease-in-out_infinite]">.</span>
+      <span className="animate-[pulse_1.4s_ease-in-out_0.2s_infinite]">.</span>
+      <span className="animate-[pulse_1.4s_ease-in-out_0.4s_infinite]">.</span>
+    </span>
+  )
+}
+
+// Extracted component for response content display
+function ResponseContent({
+  isThinking,
+  isStreaming,
+  hasContent,
+  streamedContent,
+}: {
+  isThinking: boolean
+  isStreaming: boolean
+  hasContent: boolean
+  streamedContent: string
+}) {
+  if (hasContent || isThinking) {
+    return (
+      <div className="relative">
+        {isThinking && !hasContent ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>
+              Thinking
+              <ThinkingDots />
+            </span>
+          </div>
+        ) : (
+          <>
+            <MarkdownDisplay content={streamedContent} />
+            {isStreaming && (
+              <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-primary" />
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
+      <span>AI response will appear here</span>
+    </div>
+  )
+}
+
 interface AiPromptPanelProps {
   title?: string
   readonly?: boolean
@@ -366,8 +455,10 @@ export function AiPromptPanel({
   const [isAdopting, setIsAdopting] = useState(false)
   const [isEditingResponse, setIsEditingResponse] = useState(false)
   const [editedResponse, setEditedResponse] = useState("")
-  const streamRef = useRef<number | null>(null)
-  const polishStreamRef = useRef<number | null>(null)
+  const [isThinking, setIsThinking] = useState(false)
+  const [isPolishThinking, setIsPolishThinking] = useState(false)
+  const streamRef = useRef<StreamController | null>(null)
+  const polishStreamRef = useRef<StreamController | null>(null)
   const responseContainerRef = useRef<HTMLDivElement>(null)
 
   // Get state from either local state or store based on prop
@@ -383,35 +474,11 @@ export function AiPromptPanel({
     resetForNewGeneration,
   } = useAiPanelState(useLocalState)
 
-  // Simulate streaming text character by character
-  const simulateStream = useCallback(
-    (fullText: string, setContent: (text: string) => void, onComplete?: () => void, speed = 2) => {
-      let index = 0
-      const streamInterval = setInterval(() => {
-        if (index < fullText.length) {
-          // Stream in chunks of 3-8 characters for faster, natural feel
-          const chunkSize = Math.min(Math.floor(Math.random() * 6) + 3, fullText.length - index)
-          index += chunkSize
-          setContent(fullText.slice(0, index))
-        } else {
-          clearInterval(streamInterval)
-          onComplete?.()
-        }
-      }, speed)
-      return streamInterval
-    },
-    []
-  )
-
-  // Clean up intervals on unmount
+  // Clean up stream controllers on unmount
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        clearInterval(streamRef.current)
-      }
-      if (polishStreamRef.current) {
-        clearInterval(polishStreamRef.current)
-      }
+      streamRef.current?.stop()
+      polishStreamRef.current?.stop()
     }
   }, [])
 
@@ -430,23 +497,34 @@ export function AiPromptPanel({
 
     // Reset state for new generation
     setIsStreaming(true)
+    setIsThinking(true)
     resetForNewGeneration()
 
     // Select appropriate template based on agent type
     const responseTemplate =
       agentType === "reviewer" ? MOCK_REVIEWER_RESPONSE_TEMPLATE : MOCK_PREPARER_RESPONSE_TEMPLATE
 
-    // Start streaming immediately with faster speed
-    const intervalId = simulateStream(
+    // Use realistic streaming with thinking delay and variable speed
+    const controller = simulateRealisticStream(
       responseTemplate,
       setStreamedContent,
       () => {
         setIsStreaming(false)
+        setIsThinking(false)
         setHasGeneratedResponse(true)
       },
-      2
+      {
+        thinkingDelay: 1500,
+        baseTokenDelay: 12,
+        minTokenDelay: 5,
+        maxTokenDelay: 25,
+        sentenceEndDelay: 30,
+        paragraphDelay: 50,
+        accelerate: true,
+        onStreamStart: () => setIsThinking(false),
+      }
     )
-    streamRef.current = intervalId as unknown as number
+    streamRef.current = controller
   }, [
     prompt,
     isStreaming,
@@ -454,7 +532,6 @@ export function AiPromptPanel({
     setHasGeneratedResponse,
     setStreamedContent,
     resetForNewGeneration,
-    simulateStream,
     agentType,
   ])
 
@@ -464,6 +541,7 @@ export function AiPromptPanel({
     }
 
     setIsPolishing(true)
+    setIsPolishThinking(true)
     setShowPolishDialog(true)
     setPolishStreamedText("")
 
@@ -471,17 +549,14 @@ export function AiPromptPanel({
     const polishedVersion = polishText(prompt)
     setPolishedText(polishedVersion)
 
-    // Simulate AI thinking then streaming the result
-    setTimeout(() => {
-      const intervalId = simulateStream(
-        polishedVersion,
-        setPolishStreamedText,
-        () => setIsPolishing(false),
-        20
-      )
-      polishStreamRef.current = intervalId as unknown as number
-    }, 800)
-  }, [prompt, isPolishing, simulateStream])
+    // Use quick stream with thinking delay for polish dialog
+    const controller = simulateQuickStream(polishedVersion, setPolishStreamedText, () =>
+      setIsPolishing(false)
+    )
+    // Set thinking to false when streaming starts (after the built-in delay)
+    setTimeout(() => setIsPolishThinking(false), 800)
+    polishStreamRef.current = controller
+  }, [prompt, isPolishing])
 
   const handleAcceptPolish = useCallback(() => {
     setPrompt(polishedText)
@@ -494,10 +569,9 @@ export function AiPromptPanel({
     setShowPolishDialog(false)
     setPolishedText("")
     setPolishStreamedText("")
-    if (polishStreamRef.current) {
-      clearInterval(polishStreamRef.current)
-      setIsPolishing(false)
-    }
+    polishStreamRef.current?.stop()
+    setIsPolishing(false)
+    setIsPolishThinking(false)
   }, [])
 
   const handleSelectPrompt = useCallback(
@@ -628,17 +702,7 @@ export function AiPromptPanel({
             size="sm"
             variant="outline"
           >
-            {isStreaming ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Send className="h-3.5 w-3.5" />
-                Generate
-              </>
-            )}
+            <GenerateButtonContent isStreaming={isStreaming} isThinking={isThinking} />
           </Button>
         </div>
 
@@ -696,18 +760,13 @@ export function AiPromptPanel({
                 value={editedResponse}
               />
             )}
-            {!isEditingResponse && hasContent && (
-              <div className="relative">
-                <MarkdownDisplay content={streamedContent} />
-                {isStreaming && (
-                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-primary" />
-                )}
-              </div>
-            )}
-            {!(isEditingResponse || hasContent) && (
-              <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
-                <span>AI response will appear here</span>
-              </div>
+            {!isEditingResponse && (
+              <ResponseContent
+                hasContent={hasContent}
+                isStreaming={isStreaming}
+                isThinking={isThinking}
+                streamedContent={streamedContent}
+              />
             )}
           </div>
 
@@ -760,9 +819,21 @@ export function AiPromptPanel({
                 {isPolishing && <Loader2 className="h-3 w-3 animate-spin" />}
               </div>
               <div className="min-h-[60px] rounded-md border bg-primary/5 p-3 text-sm">
-                {polishStreamedText || <span className="text-muted-foreground">Processing...</span>}
-                {isPolishing && (
-                  <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-primary" />
+                {isPolishThinking ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>
+                      Polishing
+                      <ThinkingDots />
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    {polishStreamedText}
+                    {isPolishing && (
+                      <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-primary" />
+                    )}
+                  </>
                 )}
               </div>
             </div>

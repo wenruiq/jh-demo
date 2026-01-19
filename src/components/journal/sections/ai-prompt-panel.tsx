@@ -266,7 +266,7 @@ const PROMPT_SUGGESTIONS = [
   },
 ]
 
-const MOCK_AI_RESPONSE_TEMPLATE = `## Analysis Summary
+const MOCK_PREPARER_RESPONSE_TEMPLATE = `## Analysis Summary
 
 Based on the uploaded documents and data quality checks, here are the key findings:
 
@@ -299,6 +299,46 @@ Based on the uploaded documents and data quality checks, here are the key findin
 
 **Overall Risk Rating: Low to Medium** - This journal entry follows standard month-end close procedures with minor items requiring attention.`
 
+const MOCK_REVIEWER_RESPONSE_TEMPLATE = `## Reviewer Assessment
+
+After thorough review of the submitted journal entry and supporting documentation, I have completed my analysis:
+
+### Review Summary
+
+| Review Area | Status | Notes |
+|------------|-------|-------|
+| **Accuracy** | ✅ Approved | All amounts tie out to source documents |
+| **Completeness** | ✅ Approved | Required documentation is present |
+| **Compliance** | ⚠️ Conditional | Minor documentation gaps noted below |
+| **Internal Controls** | ✅ Approved | Maker-checker segregation maintained |
+
+### Detailed Findings
+
+**Strengths:**
+- Variance explanation for Account 4500-01 is well-documented and reasonable
+- Timing difference explanation aligns with cutoff procedures
+- All intercompany transactions are properly matched
+
+**Areas Requiring Attention:**
+1. **Reclassification Entry (Line 23)** - Supporting memo has been provided and reviewed. The reclassification is appropriate and properly authorized.
+2. **Manual Override (Line 47)** - Controller approval is documented. The override is justified based on business circumstances.
+3. **Duplicate Entry Concern** - After investigation, lines 45 and 47 are not duplicates. They represent separate transactions with different reference numbers.
+
+### Control Testing
+
+| Control Objective | Test Result | Evidence Reviewed |
+|-------------------|-------------|-------------------|
+| Authorization | ✅ Pass | Approval memos verified |
+| Documentation | ✅ Pass | All required docs attached |
+| Reconciliation | ✅ Pass | Account balances reconciled |
+| Segregation of Duties | ✅ Pass | Different preparer/reviewer |
+
+### Recommendation
+
+**APPROVED** - This journal entry is ready for posting. The preparer has adequately addressed all quality check items and provided sufficient supporting documentation. The minor items identified during preparation have been resolved or appropriately documented.
+
+**Reviewer Notes:** The variance analysis and supporting explanations demonstrate appropriate due diligence. No material concerns identified.`
+
 interface AiPromptPanelProps {
   title?: string
   readonly?: boolean
@@ -306,6 +346,8 @@ interface AiPromptPanelProps {
   showUseResultButton?: boolean
   /** When true, uses local state instead of the shared store (for independent panels like Reviewer Agent) */
   useLocalState?: boolean
+  /** Agent type determines which response template to use */
+  agentType?: "preparer" | "reviewer"
 }
 
 export function AiPromptPanel({
@@ -314,6 +356,7 @@ export function AiPromptPanel({
   promptPlaceholder = "Ask AI to analyze this journal entry...",
   showUseResultButton = false,
   useLocalState = false,
+  agentType = "preparer",
 }: AiPromptPanelProps) {
   // Local UI state (not persisted)
   const [isPolishing, setIsPolishing] = useState(false)
@@ -389,9 +432,13 @@ export function AiPromptPanel({
     setIsStreaming(true)
     resetForNewGeneration()
 
+    // Select appropriate template based on agent type
+    const responseTemplate =
+      agentType === "reviewer" ? MOCK_REVIEWER_RESPONSE_TEMPLATE : MOCK_PREPARER_RESPONSE_TEMPLATE
+
     // Start streaming immediately with faster speed
     const intervalId = simulateStream(
-      MOCK_AI_RESPONSE_TEMPLATE,
+      responseTemplate,
       setStreamedContent,
       () => {
         setIsStreaming(false)
@@ -408,6 +455,7 @@ export function AiPromptPanel({
     setStreamedContent,
     resetForNewGeneration,
     simulateStream,
+    agentType,
   ])
 
   const handlePolishWriting = useCallback(() => {

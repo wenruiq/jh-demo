@@ -43,10 +43,7 @@ const MOCK_FILES = [
   { filename: "reconciliation_report.xlsx", size: "2.1 MB" },
 ]
 
-function generateAttachmentId(): string {
-  return `att-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-}
-
+// Format time ago string from a date (co-located with threads feature)
 function formatTimeAgo(date: Date): string {
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
@@ -67,6 +64,11 @@ function formatTimeAgo(date: Date): string {
     return `${diffDays}d ago`
   }
   return date.toLocaleDateString()
+}
+
+// Generate a unique ID with prefix (co-located with threads feature)
+function generateAttachmentId(): string {
+  return `att-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
 // Empty state component

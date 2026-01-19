@@ -5,6 +5,7 @@ import { type FindingsStatus, useAiFindingsStore } from "@/store/ai-findings-sto
 import { useDataQualityStore } from "@/store/data-quality-store"
 import { useDataUploadStore } from "@/store/data-upload-store"
 import { useJournalStore } from "@/store/journal-store"
+import { isQualityCheckDone } from "./quality-checks/utils"
 
 interface ProgressCardProps {
   icon: React.ReactNode
@@ -87,25 +88,6 @@ function getUploadVariant(uploaded: number, total: number): "success" | "warning
     return "warning"
   }
   return "default"
-}
-
-// Helper to check if a QC is "done" (acknowledged if passed, marked success if failed, or verified if manual)
-// This aligns with the logic in journal-check.tsx
-function isQualityCheckDone(check: {
-  type: string
-  systemResult: string
-  acknowledged: boolean
-  userResult?: string
-}): boolean {
-  // Manual checks are done when user marks them as verified (userResult = Pass)
-  if (check.type === "Manual Check") {
-    return check.userResult === "Pass"
-  }
-  // System/AI checks: if system passed, need acknowledgment; if failed, need user pass
-  if (check.systemResult === "Pass") {
-    return check.acknowledged
-  }
-  return check.userResult === "Pass"
 }
 
 function useQualityCheckProgress() {

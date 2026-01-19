@@ -14,6 +14,7 @@ export function ReviewerSummaryView() {
       <ProgressSummary />
       <SummarySection />
       <AiPromptPanel
+        agentType="reviewer"
         promptPlaceholder="Ask the reviewer agent to analyze this entry..."
         title="Reviewer Agent"
         useLocalState

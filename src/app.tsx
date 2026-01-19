@@ -88,7 +88,12 @@ function App() {
         />
         <JournalDetailPanel
           asset={selectedAsset}
-          isLoading={isLoadingDetail && !!selectedAssetId}
+          isLoading={
+            isLoadingAssets ||
+            (isLoadingDetail && !!selectedAssetId) ||
+            // Keep showing loading while auto-selecting first asset
+            (assets.length > 0 && !selectedAssetId)
+          }
         />
       </div>
     </MainLayout>

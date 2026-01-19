@@ -12,7 +12,7 @@ export const ASSERTIONS = [
 
 export type Assertion = (typeof ASSERTIONS)[number]
 
-export const CHECK_TYPES = ["AI Check", "System Check"] as const
+export const CHECK_TYPES = ["AI Check", "System Check", "Manual Check"] as const
 export type CheckType = (typeof CHECK_TYPES)[number]
 
 export type ResultStatus = "Pass" | "Failed"
@@ -234,15 +234,26 @@ export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
 
     await simulateApiDelay(600)
 
-    // New checks start with system running them
+    // Manual checks start with "Failed" system result (pending user action)
+    // AI and System checks start with "Pass" for demo
+    const isManualCheck = checkData.type === "Manual Check"
+
+    // Determine system result explanation based on check type
+    const getSystemResultExplanation = (): string | undefined => {
+      if (checkData.type === "System Check") {
+        return "System validation completed successfully. All criteria met."
+      }
+      if (isManualCheck) {
+        return "Awaiting manual verification by user."
+      }
+      return undefined
+    }
+
     const newCheck: QualityCheck = {
       ...checkData,
       id: generateId(),
-      systemResult: "Pass", // Default to pass for demo
-      systemResultExplanation:
-        checkData.type === "System Check"
-          ? "System validation completed successfully. All criteria met."
-          : undefined,
+      systemResult: isManualCheck ? "Failed" : "Pass",
+      systemResultExplanation: getSystemResultExplanation(),
       aiResult:
         checkData.type === "AI Check"
           ? "AI analysis completed. No issues detected in the reviewed data."
@@ -420,13 +431,25 @@ export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
     // Final update with complete result
     await simulateApiDelay(200)
 
+    // Randomly determine pass/fail (70% pass, 30% fail for demo variety)
+    const randomResult: ResultStatus = Math.random() > 0.3 ? "Pass" : "Failed"
+
     set((state) => {
       const existingChecks = state.checksByAssetId[assetId] ?? []
       return {
         checksByAssetId: {
           ...state.checksByAssetId,
           [assetId]: existingChecks.map((c) =>
-            c.id === checkId ? { ...c, aiResult: fullResponse } : c
+            c.id === checkId
+              ? {
+                  ...c,
+                  aiResult: fullResponse,
+                  systemResult: randomResult,
+                  // Reset user result if system result changed
+                  userResult: undefined,
+                  acknowledged: false,
+                }
+              : c
           ),
         },
         loading: { ...state.loading, testAi: null },

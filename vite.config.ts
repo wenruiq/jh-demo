@@ -19,6 +19,12 @@ export default defineConfig({
           "vendor-react": ["react", "react-dom"],
           "vendor-recharts": ["recharts"],
           "vendor-markdown": ["react-markdown", "remark-gfm"],
+          "vendor-tiptap": [
+            "@tiptap/react",
+            "@tiptap/starter-kit",
+            "@tiptap/extension-mention",
+            "@tiptap/extension-placeholder",
+          ],
           "vendor-radix": [
             "@radix-ui/react-collapsible",
             "@radix-ui/react-dialog",

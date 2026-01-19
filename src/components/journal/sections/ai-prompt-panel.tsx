@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Lightbulb, Loader2, Send, Sparkles, Wand2 } from "lucide-react"
+import { Check, ChevronDown, Edit2, Lightbulb, Loader2, Send, Sparkles, Wand2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { MarkdownDisplay } from "@/components/journal/shared/markdown-display"
@@ -146,6 +146,8 @@ export function AiPromptPanel({
   const [showPolishDialog, setShowPolishDialog] = useState(false)
   const [polishStreamedText, setPolishStreamedText] = useState("")
   const [isAdopting, setIsAdopting] = useState(false)
+  const [isEditingResponse, setIsEditingResponse] = useState(false)
+  const [editedResponse, setEditedResponse] = useState("")
   const streamRef = useRef<number | null>(null)
   const polishStreamRef = useRef<number | null>(null)
   const responseContainerRef = useRef<HTMLDivElement>(null)
@@ -289,6 +291,24 @@ export function AiPromptPanel({
     [setPrompt]
   )
 
+  const handleStartEditResponse = useCallback(() => {
+    setEditedResponse(streamedContent)
+    setIsEditingResponse(true)
+  }, [streamedContent])
+
+  const handleCancelEditResponse = useCallback(() => {
+    setIsEditingResponse(false)
+    setEditedResponse("")
+  }, [])
+
+  const handleSaveEditResponse = useCallback(() => {
+    if (editedResponse.trim()) {
+      setStreamedContent(editedResponse)
+    }
+    setIsEditingResponse(false)
+    setEditedResponse("")
+  }, [editedResponse, setStreamedContent])
+
   const handleUseResult = useCallback(() => {
     if (!streamedContent || isStreaming || isAdopting) {
       return
@@ -303,12 +323,14 @@ export function AiPromptPanel({
         generatedAt: new Date(),
       })
       setIsAdopting(false)
+      setIsEditingResponse(false)
       toast.success("Findings adopted")
     }, 600)
   }, [streamedContent, isStreaming, isAdopting, setAdoptedFindings])
 
   const hasContent = streamedContent.length > 0
-  const canUseResult = hasContent && !isStreaming && !isAdopting
+  const canUseResult = hasContent && !isStreaming && !isAdopting && !isEditingResponse
+  const canEditResponse = hasContent && !isStreaming && !isAdopting && !isEditingResponse
 
   return (
     <SectionContainer title={title}>
@@ -404,9 +426,42 @@ export function AiPromptPanel({
 
         {/* Right Panel - AI Response */}
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <div className="flex h-7 items-center gap-2 text-muted-foreground text-xs">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>AI Response</span>
+          <div className="flex h-7 items-center justify-between">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>AI Response</span>
+            </div>
+            {canEditResponse && showUseResultButton && (
+              <Button
+                className="h-6 gap-1 px-2 text-xs"
+                onClick={handleStartEditResponse}
+                size="sm"
+                variant="ghost"
+              >
+                <Edit2 className="h-3 w-3" />
+                Edit
+              </Button>
+            )}
+            {isEditingResponse && (
+              <div className="flex items-center gap-1">
+                <Button
+                  className="h-6 px-2 text-xs"
+                  onClick={handleCancelEditResponse}
+                  size="sm"
+                  variant="ghost"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="h-6 gap-1 px-2 text-xs"
+                  onClick={handleSaveEditResponse}
+                  size="sm"
+                >
+                  <Check className="h-3 w-3" />
+                  Save
+                </Button>
+              </div>
+            )}
           </div>
 
           <div
@@ -416,14 +471,22 @@ export function AiPromptPanel({
             )}
             ref={responseContainerRef}
           >
-            {hasContent ? (
+            {isEditingResponse && (
+              <textarea
+                className="h-full w-full resize-none bg-transparent font-mono text-sm focus:outline-none"
+                onChange={(e) => setEditedResponse(e.target.value)}
+                value={editedResponse}
+              />
+            )}
+            {!isEditingResponse && hasContent && (
               <div className="relative">
                 <MarkdownDisplay content={streamedContent} />
                 {isStreaming && (
                   <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-primary" />
                 )}
               </div>
-            ) : (
+            )}
+            {!(isEditingResponse || hasContent) && (
               <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
                 <span>AI response will appear here</span>
               </div>

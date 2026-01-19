@@ -133,3 +133,20 @@
     background-color: var(--color-muted-foreground);
   }
 }
+
+/* React-mentions styling */
+@layer components {
+  /* Hide input text, show highlighter text (they now have same length) */
+  .mentions-input__input {
+    color: transparent !important;
+    caret-color: var(--color-foreground) !important;
+  }
+
+  .mentions-input__input::placeholder {
+    color: var(--color-muted-foreground) !important;
+  }
+
+  .mentions-input__highlighter {
+    color: var(--color-foreground) !important;
+  }
+}

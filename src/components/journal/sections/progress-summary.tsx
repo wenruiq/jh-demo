@@ -2,7 +2,7 @@ import { CheckCircle2, FileText, Sparkles } from "lucide-react"
 import { useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { type FindingsStatus, useAiFindingsStore } from "@/store/ai-findings-store"
-import { isCheckPassed, useDataQualityStore } from "@/store/data-quality-store"
+import { useDataQualityStore } from "@/store/data-quality-store"
 import { useDataUploadStore } from "@/store/data-upload-store"
 import { useJournalStore } from "@/store/journal-store"
 
@@ -89,6 +89,25 @@ function getUploadVariant(uploaded: number, total: number): "success" | "warning
   return "default"
 }
 
+// Helper to check if a QC is "done" (acknowledged if passed, marked success if failed, or verified if manual)
+// This aligns with the logic in journal-check.tsx
+function isQualityCheckDone(check: {
+  type: string
+  systemResult: string
+  acknowledged: boolean
+  userResult?: string
+}): boolean {
+  // Manual checks are done when user marks them as verified (userResult = Pass)
+  if (check.type === "Manual Check") {
+    return check.userResult === "Pass"
+  }
+  // System/AI checks: if system passed, need acknowledgment; if failed, need user pass
+  if (check.systemResult === "Pass") {
+    return check.acknowledged
+  }
+  return check.userResult === "Pass"
+}
+
 function useQualityCheckProgress() {
   const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
   const checksByAssetId = useDataQualityStore((state) => state.checksByAssetId)
@@ -102,33 +121,34 @@ function useQualityCheckProgress() {
   }, [selectedAssetId, initializeAsset])
 
   if (!selectedAssetId) {
-    return { passed: 0, total: 0 }
+    return { done: 0, total: 0 }
   }
 
   const checks = checksByAssetId[selectedAssetId] ?? []
   const total = checks.length
-  const passed = checks.filter((c) => isCheckPassed(c)).length
+  // Use isQualityCheckDone to align with the journal checks component
+  const done = checks.filter((c) => isQualityCheckDone(c)).length
 
-  return { passed, total }
+  return { done, total }
 }
 
-function getQualityCheckDescription(passed: number, total: number): string {
+function getQualityCheckDescription(done: number, total: number): string {
   if (total === 0) {
     return "No checks defined"
   }
-  const allPassed = passed === total
-  if (allPassed) {
-    return "All checks passed"
+  const allDone = done === total
+  if (allDone) {
+    return "All checks completed"
   }
-  const pending = total - passed
+  const pending = total - done
   return `${pending} check${pending !== 1 ? "s" : ""} pending`
 }
 
-function getQualityCheckVariant(passed: number, total: number): "success" | "warning" | "default" {
-  if (total > 0 && passed === total) {
+function getQualityCheckVariant(done: number, total: number): "success" | "warning" | "default" {
+  if (total > 0 && done === total) {
     return "success"
   }
-  if (total > 0 && passed > 0) {
+  if (total > 0 && done > 0) {
     return "warning"
   }
   if (total > 0) {
@@ -172,7 +192,7 @@ function getFindingsStatusVariant(status: FindingsStatus): "success" | "warning"
 
 export function ProgressSummary({ readonly = false }: ProgressSummaryProps) {
   const { uploaded, total: uploadTotal } = useDataUploadProgress()
-  const { passed: checksPassed, total: checksTotal } = useQualityCheckProgress()
+  const { done: checksDone, total: checksTotal } = useQualityCheckProgress()
   const findingsStatus = useAiFindingsStore((state) => state.getStatus())
 
   return (
@@ -185,11 +205,11 @@ export function ProgressSummary({ readonly = false }: ProgressSummaryProps) {
         variant={getUploadVariant(uploaded, uploadTotal)}
       />
       <ProgressCard
-        description={getQualityCheckDescription(checksPassed, checksTotal)}
+        description={getQualityCheckDescription(checksDone, checksTotal)}
         icon={<CheckCircle2 className="h-5 w-5" />}
-        label="Quality Checks"
-        value={`${checksPassed}/${checksTotal}`}
-        variant={getQualityCheckVariant(checksPassed, checksTotal)}
+        label="Journal Checks"
+        value={`${checksDone}/${checksTotal}`}
+        variant={getQualityCheckVariant(checksDone, checksTotal)}
       />
       <ProgressCard
         description={getFindingsStatusDescription(findingsStatus)}

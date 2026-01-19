@@ -520,6 +520,7 @@ function AddDataUploadDialog({ onAdd, isLoading }: AddDataUploadDialogProps) {
               <SelectContent>
                 <SelectItem value="Supporting Data (Manual)">Supporting Data (Manual)</SelectItem>
                 <SelectItem value="Automation File">Automation File</SelectItem>
+                <SelectItem value="Raw Data">Raw Data</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -705,6 +706,7 @@ function EditDataUploadDialog({
               <SelectContent>
                 <SelectItem value="Supporting Data (Manual)">Supporting Data (Manual)</SelectItem>
                 <SelectItem value="Automation File">Automation File</SelectItem>
+                <SelectItem value="Raw Data">Raw Data</SelectItem>
               </SelectContent>
             </Select>
           </div>

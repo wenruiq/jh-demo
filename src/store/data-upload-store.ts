@@ -4,6 +4,7 @@ export const DATA_UPLOAD_TYPES = [
   "Supporting Data (Manual)",
   "Automation File",
   "Supporting Data (System)",
+  "Raw Data",
 ] as const
 
 export type DataUploadType = (typeof DATA_UPLOAD_TYPES)[number]
@@ -63,6 +64,15 @@ function getDefaultUploads(): DataUpload[] {
         "Monthly reconciliation report for General Ledger accounts with variance analysis",
       fileName: undefined,
       uploadedAt: undefined,
+    },
+    {
+      id: "default-raw-1",
+      name: "Transaction Ledger",
+      type: "Raw Data",
+      description:
+        "Raw transaction data from the general ledger system for the current reporting period",
+      fileName: "finance_db.transactions_2024_01",
+      uploadedAt: new Date().toISOString(),
     },
   ]
 }

@@ -1,6 +1,15 @@
-import { Bot, Check, Filter, Loader2, Plus, RotateCcw, Search, Server } from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
-import { Mention, MentionsInput } from "react-mentions"
+import {
+  Bot,
+  Check,
+  ClipboardCheck,
+  Filter,
+  Loader2,
+  Plus,
+  RotateCcw,
+  Search,
+  Server,
+} from "lucide-react"
+import { useEffect, useState } from "react"
 import { SectionContainer } from "@/components/journal/shared/section-container"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { MentionEditor } from "@/components/ui/mention-editor"
 import {
   Select,
   SelectContent,
@@ -35,54 +45,6 @@ import {
 import { useDataUploadStore } from "@/store/data-upload-store"
 import { useJournalStore } from "@/store/journal-store"
 
-// Styles for react-mentions
-const mentionInputStyle = {
-  control: {
-    fontSize: 14,
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  },
-  "&multiLine": {
-    control: {
-      minHeight: 100,
-    },
-    highlighter: {
-      padding: 12,
-      border: "1px solid transparent",
-    },
-    input: {
-      padding: 12,
-      border: "none",
-      borderRadius: 6,
-      outline: "none",
-    },
-  },
-  suggestions: {
-    list: {
-      backgroundColor: "hsl(var(--popover))",
-      border: "1px solid hsl(var(--border))",
-      borderRadius: 6,
-      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-      fontSize: 14,
-      overflow: "hidden",
-    },
-    item: {
-      padding: "8px 12px",
-      "&focused": {
-        backgroundColor: "hsl(var(--muted))",
-      },
-    },
-  },
-}
-
-const mentionStyle = {
-  backgroundColor: "hsl(var(--info))",
-  color: "hsl(var(--info-foreground))",
-  borderRadius: 9999,
-  padding: "2px 8px",
-  fontWeight: 600,
-  fontSize: 12,
-}
-
 // Get available mentions from data uploads + always include JournalEntry
 function useAvailableMentions() {
   const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
@@ -94,115 +56,13 @@ function useAvailableMentions() {
   return ["JournalEntry", ...uploadNames]
 }
 
-// Component to render @ mentions as styled badges in readonly view
-function MentionText({ text }: { text: string }) {
-  if (!text) {
-    return null
-  }
-
-  // Parse mentions in format @[display](id)
-  const mentionPattern = /@\[([^\]]+)\]\([^)]+\)/g
-  const parts: Array<{ type: "text" | "mention"; content: string }> = []
-  let lastIndex = 0
-  let match: RegExpExecArray | null = null
-
-  while (true) {
-    match = mentionPattern.exec(text)
-    if (match === null) {
-      break
-    }
-
-    if (match.index > lastIndex) {
-      parts.push({ type: "text", content: text.slice(lastIndex, match.index) })
-    }
-    parts.push({ type: "mention", content: match[1] })
-    lastIndex = match.index + match[0].length
-  }
-
-  // Also handle plain @mentions for backward compatibility
-  const plainText = text.slice(lastIndex)
-  const plainMentionPattern = /@(JournalEntry|HRIS Claims|GL Account Reconciliation)/g
-  let plainLastIndex = 0
-
-  while (true) {
-    match = plainMentionPattern.exec(plainText)
-    if (match === null) {
-      break
-    }
-
-    if (match.index > plainLastIndex) {
-      parts.push({ type: "text", content: plainText.slice(plainLastIndex, match.index) })
-    }
-    parts.push({ type: "mention", content: match[1] })
-    plainLastIndex = match.index + match[0].length
-  }
-
-  if (plainLastIndex < plainText.length) {
-    parts.push({ type: "text", content: plainText.slice(plainLastIndex) })
-  }
-
-  if (parts.length === 0) {
-    return <span>{text}</span>
-  }
-
-  return (
-    <span>
-      {parts.map((part, index) =>
-        part.type === "mention" ? (
-          <Badge className="mx-0.5" key={`mention-${index}-${part.content}`} variant="blue">
-            @{part.content}
-          </Badge>
-        ) : (
-          <span key={`text-${index}-${part.content.slice(0, 10)}`}>{part.content}</span>
-        )
-      )}
-    </span>
-  )
-}
-
-// Mention Input component using react-mentions
-interface MentionEditorProps {
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-  disabled?: boolean
-}
-
-function MentionEditor({ value, onChange, placeholder, disabled }: MentionEditorProps) {
-  const mentions = useAvailableMentions()
-
-  const mentionData = mentions.map((m) => ({ id: m, display: m }))
-
-  const handleChange = useCallback(
-    (_event: unknown, newValue: string) => {
-      onChange(newValue)
-    },
-    [onChange]
-  )
-
-  return (
-    <div className="[&_.mentions-input\_\_input]:!border-0 [&_.mentions-input\_\_input]:!outline-none rounded-md border bg-background focus-within:ring-2 focus-within:ring-ring/20">
-      <MentionsInput
-        disabled={disabled}
-        onChange={handleChange}
-        placeholder={placeholder}
-        style={mentionInputStyle}
-        value={value}
-      >
-        <Mention
-          data={mentionData}
-          displayTransform={(_id, display) => `@${display}`}
-          markup="@[__display__](__id__)"
-          style={mentionStyle}
-          trigger="@"
-        />
-      </MentionsInput>
-    </div>
-  )
-}
-
-// Helper to check if a QC is "done" (acknowledged if passed, or marked success if failed)
+// Helper to check if a QC is "done" (acknowledged if passed, marked success if failed, or verified if manual)
 function isQualityCheckDone(check: QualityCheck): boolean {
+  // Manual checks are done when user marks them as verified (userResult = Pass)
+  if (check.type === "Manual Check") {
+    return check.userResult === "Pass"
+  }
+  // System/AI checks: if system passed, need acknowledgment; if failed, need user pass
   if (check.systemResult === "Pass") {
     return check.acknowledged
   }
@@ -241,11 +101,17 @@ function QualityCheckCard({
   readonly,
 }: QualityCheckCardProps) {
   const isDone = isQualityCheckDone(check)
-  const canAcknowledge = check.systemResult === "Pass" && !check.acknowledged
-  const canUnacknowledge = check.systemResult === "Pass" && check.acknowledged
+  const isManualCheck = check.type === "Manual Check"
+  // Manual checks don't have system results - they're purely user verified
+  const canAcknowledge = !isManualCheck && check.systemResult === "Pass" && !check.acknowledged
+  const canUnacknowledge = !isManualCheck && check.systemResult === "Pass" && check.acknowledged
 
   // Determine left border color based on status
   const getLeftBorderColor = () => {
+    // Manual checks: green if verified, neutral if not
+    if (isManualCheck) {
+      return check.userResult === "Pass" ? "border-l-success/40" : "border-l-muted-foreground/30"
+    }
     if (check.systemResult === "Pass") {
       return "border-l-success/40"
     }
@@ -256,6 +122,28 @@ function QualityCheckCard({
       return "border-l-destructive/40"
     }
     return "border-l-transparent"
+  }
+
+  // Get the type label for the badge
+  const getTypeBadge = () => {
+    if (isManualCheck) {
+      return (
+        <Badge
+          className="px-1.5 py-0 text-[10px]"
+          variant={check.userResult === "Pass" ? "success" : "neutral"}
+        >
+          Manual: {check.userResult === "Pass" ? "Verified" : "Pending"}
+        </Badge>
+      )
+    }
+    return (
+      <Badge
+        className="px-1.5 py-0 text-[10px]"
+        variant={check.systemResult === "Pass" ? "success" : "destructive-outline"}
+      >
+        {check.type === "AI Check" ? "AI" : "System"}: {check.systemResult}
+      </Badge>
+    )
   }
 
   return (
@@ -274,13 +162,8 @@ function QualityCheckCard({
           <span className="text-muted-foreground">{check.title}</span>
         </p>
         <div className="mt-2.5 flex items-center gap-1.5">
-          <Badge
-            className="px-1.5 py-0 text-[10px]"
-            variant={check.systemResult === "Pass" ? "success" : "destructive-outline"}
-          >
-            {check.type === "AI Check" ? "AI" : "System"}: {check.systemResult}
-          </Badge>
-          {check.systemResult === "Failed" && check.userResult === "Pass" && (
+          {getTypeBadge()}
+          {!isManualCheck && check.systemResult === "Failed" && check.userResult === "Pass" && (
             <Badge className="px-1.5 py-0 text-[10px]" variant="success">
               User: Pass
             </Badge>
@@ -512,9 +395,11 @@ function SystemCheckDetail({ check, assetId, readonly = false }: SystemCheckDeta
 // Helper component for AI prompt editor
 interface AiPromptEditorProps {
   localPrompt: string
+  mentions: string[]
   hasChanges: boolean
   isStreaming: boolean
-  isLoading: boolean
+  isTestLoading: boolean
+  isSaveLoading: boolean
   onPromptChange: (value: string) => void
   onTest: () => Promise<void>
   onSave: () => Promise<void>
@@ -522,23 +407,28 @@ interface AiPromptEditorProps {
 
 function AiPromptEditor({
   localPrompt,
+  mentions,
   hasChanges,
   isStreaming,
-  isLoading,
+  isTestLoading,
+  isSaveLoading,
   onPromptChange,
   onTest,
   onSave,
 }: AiPromptEditorProps) {
+  const isBusy = isTestLoading || isSaveLoading || isStreaming
+
   return (
     <div className="space-y-2">
       <MentionEditor
+        mentions={mentions}
         onChange={onPromptChange}
         placeholder="Enter prompt. Type @ to reference data assets..."
         value={localPrompt}
       />
       <div className="flex justify-end gap-2">
-        <Button disabled={isLoading || isStreaming} onClick={onTest} size="sm" variant="outline">
-          {isLoading || isStreaming ? (
+        <Button disabled={isBusy} onClick={onTest} size="sm" variant="outline">
+          {isTestLoading || isStreaming ? (
             <>
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
               Running...
@@ -547,8 +437,8 @@ function AiPromptEditor({
             "Test"
           )}
         </Button>
-        <Button disabled={!hasChanges || isLoading} onClick={onSave} size="sm">
-          {isLoading ? (
+        <Button disabled={!hasChanges || isBusy} onClick={onSave} size="sm">
+          {isSaveLoading ? (
             <>
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
               Saving...
@@ -662,6 +552,7 @@ interface AiCheckDetailProps {
 }
 
 function AiCheckDetail({ check, assetId, readonly = false }: AiCheckDetailProps) {
+  const mentions = useAvailableMentions()
   const loading = useDataQualityStore((state) => state.loading)
   const streamingCheckId = useDataQualityStore((state) => state.streamingCheckId)
   const streamingContent = useDataQualityStore((state) => state.streamingContent)
@@ -740,17 +631,17 @@ function AiCheckDetail({ check, assetId, readonly = false }: AiCheckDetailProps)
           Prompt
         </p>
         {readonly ? (
-          <div className="rounded-md bg-muted/50 p-3">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">
-              <MentionText text={localPrompt} />
-            </p>
+          <div className="rounded-md bg-muted/50 px-3 py-2">
+            <MentionEditor mentions={mentions} readonly value={localPrompt} />
           </div>
         ) : (
           <AiPromptEditor
             hasChanges={hasChanges}
-            isLoading={loading.savePrompt === check.id || loading.testAi === check.id}
+            isSaveLoading={loading.savePrompt === check.id}
             isStreaming={isStreaming}
+            isTestLoading={loading.testAi === check.id}
             localPrompt={localPrompt}
+            mentions={mentions}
             onPromptChange={handlePromptChange}
             onSave={handleSave}
             onTest={handleTest}
@@ -771,10 +662,10 @@ function AiCheckDetail({ check, assetId, readonly = false }: AiCheckDetailProps)
             )}
           </div>
           <div className="rounded-md bg-muted/50 p-3">
-            <p className="text-sm leading-relaxed">
-              <MentionText text={displayResult ?? ""} />
-              {isStreaming && <span className="ml-1 animate-pulse">|</span>}
-            </p>
+            {displayResult && <MentionEditor mentions={mentions} readonly value={displayResult} />}
+            {isStreaming && (
+              <span className="inline-block h-4 w-0.5 animate-pulse bg-foreground align-middle" />
+            )}
           </div>
         </div>
       )}
@@ -843,6 +734,140 @@ function AiCheckDetail({ check, assetId, readonly = false }: AiCheckDetailProps)
   )
 }
 
+// Manual Check Detail Panel
+interface ManualCheckDetailProps {
+  check: QualityCheck
+  assetId: string
+  readonly?: boolean
+}
+
+function ManualCheckDetail({ check, assetId, readonly = false }: ManualCheckDetailProps) {
+  const loading = useDataQualityStore((state) => state.loading)
+  const markSuccess = useDataQualityStore((state) => state.markSuccess)
+  const revertUserResult = useDataQualityStore((state) => state.revertUserResult)
+
+  const [attestation, setAttestation] = useState(check.attestation ?? "")
+  const [isEditing, setIsEditing] = useState(!check.userResult)
+
+  useEffect(() => {
+    setAttestation(check.attestation ?? "")
+    setIsEditing(!check.userResult)
+  }, [check.attestation, check.userResult])
+
+  const isDone = check.userResult === "Pass"
+
+  const handleMarkSuccess = async () => {
+    if (!attestation.trim()) {
+      return
+    }
+    await markSuccess(assetId, check.id, attestation)
+    setIsEditing(false)
+  }
+
+  const handleRevert = async () => {
+    await revertUserResult(assetId, check.id)
+    setIsEditing(true)
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="font-semibold text-base">
+          <span className="font-bold">{check.assertion}:</span> {check.title}
+        </h3>
+        <Badge className="mt-1.5" variant="neutral">
+          <ClipboardCheck className="mr-1 h-3 w-3" />
+          Manual Check
+        </Badge>
+      </div>
+
+      <div>
+        <p className="mb-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+          Description
+        </p>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed">{check.description}</p>
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex items-center gap-2">
+          <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+            Verification
+          </p>
+          {check.userResult === "Pass" && (
+            <div className="flex items-center gap-1">
+              <Badge variant="success">Verified</Badge>
+              {!readonly && (
+                <Button
+                  className="h-6 px-1.5 text-[10px]"
+                  disabled={loading.revertUserResult === check.id}
+                  onClick={handleRevert}
+                  size="sm"
+                  variant="ghost"
+                >
+                  {loading.revertUserResult === check.id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <RotateCcw className="mr-1 h-3 w-3" />
+                      Revert
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+        {isEditing && !readonly ? (
+          <div className="space-y-2">
+            <Textarea
+              className="min-h-[80px]"
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setAttestation(e.target.value)
+              }
+              placeholder="Provide verification notes explaining how this check was completed..."
+              value={attestation}
+            />
+            <div className="flex justify-end">
+              <Button
+                disabled={!attestation.trim() || loading.markSuccess === check.id}
+                onClick={handleMarkSuccess}
+                size="sm"
+              >
+                {loading.markSuccess === check.id ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                    Mark Verified
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          check.userResult === "Pass" && (
+            <div className="rounded-md bg-muted/50 p-3">
+              <p className="text-sm leading-relaxed">
+                {check.attestation || "No verification notes provided"}
+              </p>
+            </div>
+          )
+        )}
+      </div>
+
+      {isDone && (
+        <div className="flex items-center gap-2 rounded-md bg-success-muted p-3">
+          <Check className="h-4 w-4 text-success" />
+          <p className="font-medium text-sm text-success">Manual check verified</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Add Quality Check Dialog
 interface AddQualityCheckDialogProps {
   isLoading: boolean
@@ -896,7 +921,7 @@ function AddQualityCheckDialog({ isLoading, onAdd }: AddQualityCheckDialogProps)
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Quality Check</DialogTitle>
+          <DialogTitle>Add Journal Check</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="flex gap-3">
@@ -942,11 +967,9 @@ function AddQualityCheckDialog({ isLoading, onAdd }: AddQualityCheckDialogProps)
                 {CHECK_TYPES.map((t) => (
                   <SelectItem key={t} value={t}>
                     <span className="flex items-center gap-1.5">
-                      {t === "AI Check" ? (
-                        <Bot className="h-3.5 w-3.5" />
-                      ) : (
-                        <Server className="h-3.5 w-3.5" />
-                      )}
+                      {t === "AI Check" && <Bot className="h-3.5 w-3.5" />}
+                      {t === "System Check" && <Server className="h-3.5 w-3.5" />}
+                      {t === "Manual Check" && <ClipboardCheck className="h-3.5 w-3.5" />}
                       {t}
                     </span>
                   </SelectItem>
@@ -988,11 +1011,11 @@ function AddQualityCheckDialog({ isLoading, onAdd }: AddQualityCheckDialogProps)
   )
 }
 
-interface DataQualityCheckProps {
+interface JournalCheckProps {
   readonly?: boolean
 }
 
-export function DataQualityCheck({ readonly = false }: DataQualityCheckProps) {
+export function JournalCheck({ readonly = false }: JournalCheckProps) {
   const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
   const checksByAssetId = useDataQualityStore((state) => state.checksByAssetId)
   const initializeAsset = useDataQualityStore((state) => state.initializeAsset)
@@ -1062,7 +1085,7 @@ export function DataQualityCheck({ readonly = false }: DataQualityCheckProps) {
   ).length
 
   return (
-    <SectionContainer title="Data Quality Checks">
+    <SectionContainer title="Journal Checks">
       <div
         className={cn("flex overflow-hidden rounded-lg border", readonly && "opacity-80")}
         style={{ height: "520px" }}
@@ -1163,6 +1186,13 @@ export function DataQualityCheck({ readonly = false }: DataQualityCheckProps) {
           )}
           {selectedCheck && selectedCheck.type === "AI Check" && (
             <AiCheckDetail
+              assetId={selectedAssetId ?? ""}
+              check={selectedCheck}
+              readonly={readonly}
+            />
+          )}
+          {selectedCheck && selectedCheck.type === "Manual Check" && (
+            <ManualCheckDetail
               assetId={selectedAssetId ?? ""}
               check={selectedCheck}
               readonly={readonly}

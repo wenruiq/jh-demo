@@ -1,5 +1,6 @@
 import { Check, Filter, Info, Loader2, Search } from "lucide-react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -66,7 +67,36 @@ export function JournalCheck({ readonly = false }: JournalCheckProps) {
     if (!selectedAssetId) {
       return
     }
+
+    // Calculate counts before acknowledging
+    const toAcknowledge = checks.filter(
+      (c) => (c.systemResult === "Pass" || c.userResult === "Pass") && !c.acknowledged
+    )
+    const pendingOverride = checks.filter((c) => c.systemResult === "Failed" && !c.userResult)
+
     await acknowledgeAll(selectedAssetId)
+
+    // Show toast with results
+    const acknowledgedCount = toAcknowledge.length
+    const pendingCount = pendingOverride.length
+
+    if (acknowledgedCount > 0 && pendingCount > 0) {
+      toast.success(
+        `${acknowledgedCount} check${acknowledgedCount !== 1 ? "s" : ""} acknowledged`,
+        {
+          description: `${pendingCount} check${pendingCount !== 1 ? "s" : ""} pending manual override`,
+          duration: 5000,
+        }
+      )
+    } else if (acknowledgedCount > 0) {
+      toast.success(
+        `${acknowledgedCount} check${acknowledgedCount !== 1 ? "s" : ""} acknowledged`,
+        {
+          description: "All checks acknowledged",
+          duration: 4000,
+        }
+      )
+    }
   }
 
   const handleAddCheck = async (checkData: {
@@ -85,6 +115,16 @@ export function JournalCheck({ readonly = false }: JournalCheckProps) {
   const acknowledgeableCount = checks.filter(
     (c) => c.systemResult === "Pass" && !c.acknowledged
   ).length
+
+  const getCheckAllDisabledReason = (): string => {
+    if (checks.length === 0) {
+      return "No checks to acknowledge"
+    }
+    if (checks.every((c) => c.acknowledged)) {
+      return "All checks already acknowledged"
+    }
+    return "No passed checks to acknowledge"
+  }
 
   return (
     <SectionContainer title="Journal Checks">
@@ -110,22 +150,35 @@ export function JournalCheck({ readonly = false }: JournalCheckProps) {
             </Button>
             {!readonly && (
               <>
-                <Button
-                  className="h-7 px-2 text-xs"
-                  disabled={acknowledgeableCount === 0 || loading.acknowledgeAll}
-                  onClick={handleAcknowledgeAll}
-                  size="sm"
-                  variant="ghost"
-                >
-                  {loading.acknowledgeAll ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <>
-                      <Check className="mr-1 h-3 w-3" />
-                      All
-                    </>
-                  )}
-                </Button>
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Button
+                          className="h-7 px-2 text-xs"
+                          disabled={acknowledgeableCount === 0 || loading.acknowledgeAll}
+                          onClick={handleAcknowledgeAll}
+                          size="sm"
+                          variant="ghost"
+                        >
+                          {loading.acknowledgeAll ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <>
+                              <Check className="mr-1 h-3 w-3" />
+                              All
+                            </>
+                          )}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {acknowledgeableCount === 0 && !loading.acknowledgeAll && (
+                      <TooltipContent side="bottom">
+                        <p>{getCheckAllDisabledReason()}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
                 <AddQualityCheckDialog isLoading={loading.addCheck} onAdd={handleAddCheck} />
               </>
             )}
@@ -169,7 +222,7 @@ export function JournalCheck({ readonly = false }: JournalCheckProps) {
               <p className="text-[11px] text-muted-foreground">
                 {pendingCount > 0
                   ? `${pendingCount} check${pendingCount !== 1 ? "s" : ""} pending`
-                  : "All checks completed"}
+                  : "All checks acknowledged"}
               </p>
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
@@ -178,7 +231,7 @@ export function JournalCheck({ readonly = false }: JournalCheckProps) {
                   </TooltipTrigger>
                   <TooltipContent className="max-w-[220px]" side="top">
                     <p>
-                      A check is completed when you acknowledge passed results or mark failed checks
+                      A check is acknowledged when you confirm passed checks or mark failed checks
                       as success
                     </p>
                   </TooltipContent>

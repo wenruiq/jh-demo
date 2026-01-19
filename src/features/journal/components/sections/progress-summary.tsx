@@ -114,9 +114,8 @@ function getQualityCheckDescription(done: number, total: number): string {
   if (total === 0) {
     return "No checks defined"
   }
-  const allDone = done === total
-  if (allDone) {
-    return "All checks completed"
+  if (done === total) {
+    return "All checks acknowledged"
   }
   const pending = total - done
   return `${pending} check${pending !== 1 ? "s" : ""} pending`

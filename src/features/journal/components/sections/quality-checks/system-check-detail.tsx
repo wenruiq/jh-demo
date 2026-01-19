@@ -167,33 +167,45 @@ export function SystemCheckDetail({ check, assetId, readonly = false }: SystemCh
         </div>
       )}
 
-      {canUnacknowledge && !readonly && (
-        <div className="flex justify-end border-t pt-4">
-          <Button
-            disabled={loading.unacknowledge === check.id}
-            onClick={() => unacknowledgeCheck(assetId, check.id)}
-            size="sm"
-            variant="outline"
-          >
-            {loading.unacknowledge === check.id ? (
-              <>
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                Reverting...
-              </>
-            ) : (
-              <>
-                <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                Undo Acknowledge
-              </>
-            )}
-          </Button>
+      {canUnacknowledge && (
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center gap-2 rounded-md bg-success-muted p-3">
+            <Check className="h-4 w-4 text-success" />
+            <p className="font-medium text-sm text-success">
+              Journal check passed & acknowledged by preparer
+            </p>
+          </div>
+          {!readonly && (
+            <div className="flex justify-end">
+              <Button
+                disabled={loading.unacknowledge === check.id}
+                onClick={() => unacknowledgeCheck(assetId, check.id)}
+                size="sm"
+                variant="outline"
+              >
+                {loading.unacknowledge === check.id ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    Reverting...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                    Undo Acknowledge
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
       {isDone && !canUnacknowledge && (
         <div className="flex items-center gap-2 rounded-md bg-success-muted p-3">
           <Check className="h-4 w-4 text-success" />
-          <p className="font-medium text-sm text-success">Quality check completed</p>
+          <p className="font-medium text-sm text-success">
+            Journal check result overridden & acknowledged by preparer
+          </p>
         </div>
       )}
     </div>

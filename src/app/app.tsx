@@ -35,12 +35,11 @@ export function AppShell() {
   return (
     <MainLayout>
       <Toaster
-        duration={2000}
+        duration={2500}
         expand={false}
         gap={8}
         offset={16}
-        position="top-right"
-        richColors={false}
+        position="bottom-center"
         theme={theme}
         toastOptions={{
           classNames: {

@@ -132,7 +132,9 @@ export function ManualCheckDetail({ check, assetId, readonly = false }: ManualCh
       {isDone && (
         <div className="flex items-center gap-2 rounded-md bg-success-muted p-3">
           <Check className="h-4 w-4 text-success" />
-          <p className="font-medium text-sm text-success">Manual check verified</p>
+          <p className="font-medium text-sm text-success">
+            Journal check verified & acknowledged by preparer
+          </p>
         </div>
       )}
     </div>

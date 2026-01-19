@@ -7,7 +7,7 @@ import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 
 // Top-level regex patterns for mention parsing
 const MENTION_BRACES_PATTERN = /@\{([^}]+)\}/g // @{Name} format

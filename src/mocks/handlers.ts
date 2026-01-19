@@ -1,11 +1,15 @@
 import { delay, HttpResponse, http } from "msw"
-import { mockAssetDetails, mockAssets, updateMockAsset } from "@/data/mock-journals"
+import {
+  mockAssetDetails,
+  mockAssets,
+  updateMockAsset,
+} from "@/features/journal/data/mock-journals"
 import type {
   GetAssetResponse,
   ListAssetsResponse,
   UpdateAssetStatusRequest,
   UpdateAssetStatusResponse,
-} from "@/types/journal"
+} from "@/features/journal/types"
 
 const API_DELAY = 150 // Simulated network delay in ms
 const VALIDATION_DELAY = 400 // Delay for validation simulation

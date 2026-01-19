@@ -67,25 +67,115 @@ const PROMPT_SUGGESTIONS = [
   {
     category: "Analysis",
     prompts: [
-      "Analyze this journal entry for potential risks and anomalies",
-      "Identify any account reconciliation discrepancies",
-      "Check for unusual transaction patterns or outliers",
+      {
+        title: "Analyze this journal entry for potential risks and anomalies",
+        content: `Analyze this journal entry for potential risks and anomalies:
+
+- **Examine** transaction amounts for unusual patterns or statistical outliers
+- **Identify** any account balances that exceed expected thresholds
+- **Flag** entries with missing or incomplete supporting documentation
+- **Highlight** transactions that deviate from standard business processes
+
+Provide a comprehensive risk assessment with specific examples of any concerns identified.`,
+      },
+      {
+        title: "Identify any account reconciliation discrepancies",
+        content: `Identify any account reconciliation discrepancies:
+
+- **Compare** journal entry amounts against source system records
+- **Verify** that all debit and credit entries properly balance
+- **Check** for rounding differences or calculation errors
+- **Validate** that account codes match the Chart of Accounts structure
+
+Document any variances found and recommend corrective actions if needed.`,
+      },
+      {
+        title: "Check for unusual transaction patterns or outliers",
+        content: `Check for unusual transaction patterns or outliers:
+
+- **Analyze** transaction timing and frequency for anomalies
+- **Identify** entries posted outside of normal business hours or periods
+- **Flag** duplicate or potentially redundant transactions
+- **Detect** unusual account code combinations or posting patterns
+
+Summarize findings and assess whether anomalies require further investigation.`,
+      },
     ],
   },
   {
     category: "Summary",
     prompts: [
-      "Summarize the key findings from the uploaded documents",
-      "Generate an executive summary of this journal entry",
-      "List the top 3 items requiring reviewer attention",
+      {
+        title: "Summarize the key findings from the uploaded documents",
+        content: `Summarize the key findings from the uploaded documents:
+
+- **Review** all supporting documentation attached to this journal entry
+- **Extract** material facts, amounts, and business justifications
+- **Identify** the primary purpose and accounting treatment of this entry
+- **Highlight** any special considerations or unusual circumstances
+
+Present a concise executive summary suitable for management review.`,
+      },
+      {
+        title: "Generate an executive summary of this journal entry",
+        content: `Generate an executive summary of this journal entry:
+
+- **Describe** the business purpose and accounting rationale
+- **Quantify** the financial impact including total debits and credits
+- **Assess** the overall quality and completeness of supporting documentation
+- **Evaluate** compliance with accounting policies and internal controls
+
+Provide a clear, high-level overview appropriate for senior stakeholders.`,
+      },
+      {
+        title: "List the top 3 items requiring reviewer attention",
+        content: `List the top 3 items requiring reviewer attention:
+
+- **Prioritize** issues based on materiality and potential financial impact
+- **Identify** unresolved quality check failures or data validation errors
+- **Highlight** missing documentation or incomplete approval workflows
+- **Flag** any regulatory compliance or policy deviation concerns
+
+Rank items by urgency and provide specific recommendations for resolution.`,
+      },
     ],
   },
   {
     category: "Compliance",
     prompts: [
-      "Verify compliance with internal controls requirements",
-      "Check if all required supporting documents are attached",
-      "Identify any segregation of duties concerns",
+      {
+        title: "Verify compliance with internal controls requirements",
+        content: `Verify compliance with internal controls requirements:
+
+- **Confirm** proper segregation of duties between preparer and approver
+- **Validate** that authorization thresholds have been respected
+- **Check** that the approval workflow was completed correctly
+- **Ensure** all required control checkpoints have been satisfied
+
+Document the control testing results and any gaps requiring remediation.`,
+      },
+      {
+        title: "Check if all required supporting documents are attached",
+        content: `Check if all required supporting documents are attached:
+
+- **Verify** presence of source documents, invoices, or contracts as applicable
+- **Validate** that supporting calculations and reconciliations are included
+- **Confirm** management approvals and authorization memos are present
+- **Assess** whether documentation quality meets policy standards
+
+Provide a completeness assessment and list any missing required attachments.`,
+      },
+      {
+        title: "Identify any segregation of duties concerns",
+        content: `Identify any segregation of duties concerns:
+
+- **Review** the roles and responsibilities of personnel involved in this entry
+- **Verify** that the preparer and approver are different individuals
+- **Check** for any conflicts of interest or incompatible duties
+- **Validate** compliance with independence and authorization requirements
+
+Highlight any potential control weaknesses and recommend corrective measures.`,
+      },
     ],
   },
 ]
@@ -163,7 +253,7 @@ After thorough review of the submitted journal entry and supporting documentatio
 
 **Reviewer Notes:** The variance analysis and supporting explanations demonstrate appropriate due diligence. No material concerns identified.`
 
-const MOCK_POLISH_RESPONSE = `Please analyze the following journal entry for compliance with month-end close procedures:
+const MOCK_PREPARER_POLISH_RESPONSE = `Please analyze the following journal entry for compliance with month-end close procedures:
 
 - **Verify** all account balances reconcile to supporting documentation
 - **Confirm** variance explanations are within acceptable thresholds
@@ -171,6 +261,16 @@ const MOCK_POLISH_RESPONSE = `Please analyze the following journal entry for com
 - **Validate** cutoff procedures were followed correctly
 
 Flag any discrepancies or items requiring additional review before final approval.`
+
+const MOCK_REVIEWER_POLISH_RESPONSE = `Please conduct a comprehensive review of the submitted journal entry and assess readiness for final approval:
+
+- **Evaluate** the adequacy of supporting documentation and preparer explanations
+- **Validate** that all quality check items have been appropriately addressed
+- **Assess** whether variance explanations are reasonable and properly justified
+- **Verify** internal controls compliance including maker-checker segregation
+- **Confirm** all flagged items from data quality checks have been resolved or documented
+
+Provide a final recommendation on whether this entry should be approved, returned for revision, or escalated for additional review.`
 
 function GenerateButtonContent({
   isThinking,
@@ -356,18 +456,21 @@ export function AiPromptPanel({
       return
     }
 
+    const polishResponse =
+      agentType === "reviewer" ? MOCK_REVIEWER_POLISH_RESPONSE : MOCK_PREPARER_POLISH_RESPONSE
+
     setIsPolishing(true)
     setIsPolishThinking(true)
     setShowPolishDialog(true)
     setPolishStreamedText("")
-    setPolishedText(MOCK_POLISH_RESPONSE)
+    setPolishedText(polishResponse)
 
-    const controller = simulateQuickStream(MOCK_POLISH_RESPONSE, setPolishStreamedText, () =>
+    const controller = simulateQuickStream(polishResponse, setPolishStreamedText, () =>
       setIsPolishing(false)
     )
     setTimeout(() => setIsPolishThinking(false), 800)
     polishStreamRef.current = controller
-  }, [prompt, isPolishing])
+  }, [prompt, isPolishing, agentType])
 
   const handleAcceptPolish = useCallback(() => {
     setPrompt(polishedText)
@@ -386,8 +489,8 @@ export function AiPromptPanel({
   }, [])
 
   const handleSelectPrompt = useCallback(
-    (selectedPrompt: string) => {
-      setPrompt(selectedPrompt)
+    (selectedPromptContent: string) => {
+      setPrompt(selectedPromptContent)
     },
     [setPrompt]
   )
@@ -478,10 +581,10 @@ export function AiPromptPanel({
                       {category.prompts.map((suggestionPrompt) => (
                         <DropdownMenuItem
                           className="cursor-pointer text-xs"
-                          key={suggestionPrompt}
-                          onClick={() => handleSelectPrompt(suggestionPrompt)}
+                          key={suggestionPrompt.title}
+                          onClick={() => handleSelectPrompt(suggestionPrompt.content)}
                         >
-                          <span className="line-clamp-2">{suggestionPrompt}</span>
+                          {suggestionPrompt.title}
                         </DropdownMenuItem>
                       ))}
                     </div>

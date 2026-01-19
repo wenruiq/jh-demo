@@ -171,6 +171,17 @@ function getDefaultChecks(): QualityCheck[] {
         "Currency translation variance detected in @JournalEntry line items 23-27. EUR/USD rate of 1.0823 used differs from market rate of 1.0891 on transaction date, resulting in $2,340 understatement.",
       acknowledged: false,
     },
+    {
+      id: "default-qc-5",
+      assertion: "Existence",
+      title: "Management Authorization Verification",
+      type: "Manual Check",
+      description:
+        "This manual check requires verification that appropriate management authorization was obtained for material or unusual journal entries. Review the approval workflow to confirm that entries exceeding established thresholds have been properly approved by authorized personnel.\n\nThis control ensures that significant accounting adjustments receive adequate oversight and that proper segregation of duties is maintained throughout the journal entry approval process.",
+      systemResult: "Failed",
+      systemResultExplanation: "Awaiting manual verification by user.",
+      acknowledged: false,
+    },
   ]
 }
 

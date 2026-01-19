@@ -28,181 +28,6 @@ import {
 import { cn } from "@/lib/utils"
 import { useAiFindingsStore } from "@/store/ai-findings-store"
 
-// Finance/Accounting abbreviation expansions
-const FINANCE_ABBREVIATIONS: [RegExp, string][] = [
-  [/\bGL\b/g, "General Ledger"],
-  [/\bAP\b/g, "Accounts Payable"],
-  [/\bAR\b/g, "Accounts Receivable"],
-  [/\bJE\b/g, "journal entry"],
-  [/\bJEs\b/g, "journal entries"],
-  [/\bYTD\b/g, "year-to-date"],
-  [/\bMTD\b/g, "month-to-date"],
-  [/\bQTD\b/g, "quarter-to-date"],
-  [/\bPY\b/g, "prior year"],
-  [/\bCY\b/g, "current year"],
-  [/\bPM\b/g, "prior month"],
-  [/\bCM\b/g, "current month"],
-  [/\bFY\b/g, "fiscal year"],
-  [/\bP&L\b/g, "Profit and Loss"],
-  [/\bPnL\b/g, "Profit and Loss"],
-  [/\bBS\b/g, "Balance Sheet"],
-  [/\bTB\b/g, "Trial Balance"],
-  [/\bSOX\b/g, "Sarbanes-Oxley"],
-  [/\bGAAP\b/g, "Generally Accepted Accounting Principles"],
-  [/\bIFRS\b/g, "International Financial Reporting Standards"],
-  [/\bWIP\b/g, "work in progress"],
-  [/\bFX\b/g, "foreign exchange"],
-  [/\binterco\b/gi, "intercompany"],
-  [/\brecon\b/gi, "reconciliation"],
-  [/\brecons\b/gi, "reconciliations"],
-  [/\bacct\b/gi, "account"],
-  [/\baccts\b/gi, "accounts"],
-  [/\badj\b/gi, "adjustment"],
-  [/\badjs\b/gi, "adjustments"],
-  [/\bvar\b/gi, "variance"],
-  [/\bvars\b/gi, "variances"],
-  [/\bdocs\b/gi, "documentation"],
-  [/\bbal\b/gi, "balance"],
-  [/\bbals\b/gi, "balances"],
-  [/\bpmt\b/gi, "payment"],
-  [/\bpmts\b/gi, "payments"],
-  [/\btxn\b/gi, "transaction"],
-  [/\btxns\b/gi, "transactions"],
-]
-
-// Informal word replacements
-const WORD_REPLACEMENTS: [RegExp, string][] = [
-  [/\bpls\b/gi, "please"],
-  [/\bplz\b/gi, "please"],
-  [/\bthx\b/gi, "thank you"],
-  [/\basap\b/gi, "as soon as possible"],
-  [/\bfyi\b/gi, "for your information"],
-  [/\bw\/\b/gi, "with"],
-  [/\bw\/o\b/gi, "without"],
-  [/\bi'm\b/gi, "I am"],
-  [/\bdon't\b/gi, "do not"],
-  [/\bcan't\b/gi, "cannot"],
-  [/\bwon't\b/gi, "will not"],
-  [/\bdidn't\b/gi, "did not"],
-  [/\bdoesn't\b/gi, "does not"],
-  [/\bisn't\b/gi, "is not"],
-  [/\bhaven't\b/gi, "have not"],
-  [/\bwouldn't\b/gi, "would not"],
-  [/\bcouldn't\b/gi, "could not"],
-  [/\bshouldn't\b/gi, "should not"],
-  [/\bit's\b/gi, "it is"],
-  [/\bthat's\b/gi, "that is"],
-  [/\bthere's\b/gi, "there is"],
-  [/\bi've\b/gi, "I have"],
-  [/\bwe've\b/gi, "we have"],
-  [/\bi'll\b/gi, "I will"],
-  [/\bwe'll\b/gi, "we will"],
-  [/\byou're\b/gi, "you are"],
-  [/\bwe're\b/gi, "we are"],
-  [/\bwanna\b/gi, "want to"],
-  [/\bgonna\b/gi, "going to"],
-  [/\bgotta\b/gi, "need to"],
-  [/\bcuz\b/gi, "because"],
-  [/\btho\b/gi, "though"],
-]
-
-// Regex patterns for text polishing (top-level for performance)
-const SENTENCE_START_REGEX = /(^|[.!?]\s+)([a-z])/g
-const ENDS_WITH_PUNCTUATION_REGEX = /[.!?]$/
-const SPACE_BEFORE_PUNCTUATION_REGEX = /\s+([.!?,;:])/g
-const MULTIPLE_SPACES_REGEX = /\s{2,}/g
-const WHITESPACE_REGEX = /\s+/g
-const STANDALONE_I_REGEX = /\bi\b/g
-
-// Finance-context phrase improvements
-const PHRASE_IMPROVEMENTS: [RegExp, string][] = [
-  // Finance-specific phrases
-  [/\bcheck if.* balance[s]? match\b/gi, "verify account reconciliation status"],
-  [/\bmake sure.* tie[s]? out\b/gi, "confirm balances reconcile"],
-  [/\bwhy.* (number|amount)[s]? (are |is )?off\b/gi, "identify the root cause of the variance"],
-  [/\bdig into\b/gi, "investigate"],
-  [/\blook at\b/gi, "analyze"],
-  [/\blook into\b/gi, "investigate"],
-  [/\bcheck out\b/gi, "review"],
-  [/\bcheck on\b/gi, "verify"],
-  [/\bcheck for\b/gi, "identify any"],
-  [/\bfigure out\b/gi, "determine"],
-  [/\bfind out\b/gi, "identify"],
-  [/\bmake sure\b/gi, "ensure"],
-  [/\bsign off\b/gi, "approve"],
-  [/\bclose out\b/gi, "finalize"],
-  [/\bbook(?:ed)?\b/gi, "record"],
-  [/\bbooked to\b/gi, "recorded in"],
-  // General professional phrases
-  [/\ba lot of\b/gi, "significant"],
-  [/\ba bunch of\b/gi, "multiple"],
-  [/\bkind of\b/gi, "somewhat"],
-  [/\bpretty\b/gi, "relatively"],
-  [/\bi think\b/gi, "it appears"],
-  [/\bi guess\b/gi, "it appears"],
-  [/\bmaybe\b/gi, "potentially"],
-  [/\bstuff\b/gi, "items"],
-  [/\bthings\b/gi, "items"],
-  [/\bbig\b/gi, "material"],
-  [/\bsmall\b/gi, "immaterial"],
-  [/\bweird\b/gi, "unusual"],
-  [/\bodd\b/gi, "anomalous"],
-  [/\boff\b/gi, "discrepant"],
-  [/\bwrong\b/gi, "incorrect"],
-  [/\bmissing\b/gi, "absent"],
-  [/\bget\b/gi, "obtain"],
-  [/\bgive\b/gi, "provide"],
-  [/\bneed\b/gi, "require"],
-  [/\bfix\b/gi, "correct"],
-  [/\bflag\b/gi, "highlight"],
-]
-
-// Polish text with rule-based transformations for finance/accounting context
-function polishText(input: string): string {
-  let result = input.trim()
-
-  // Apply finance abbreviation expansions first
-  for (const [pattern, replacement] of FINANCE_ABBREVIATIONS) {
-    result = result.replace(pattern, replacement)
-  }
-
-  // Apply informal word replacements
-  for (const [pattern, replacement] of WORD_REPLACEMENTS) {
-    result = result.replace(pattern, replacement)
-  }
-
-  // Apply phrase improvements
-  for (const [pattern, replacement] of PHRASE_IMPROVEMENTS) {
-    result = result.replace(pattern, replacement)
-  }
-
-  // Normalize whitespace
-  result = result.replace(WHITESPACE_REGEX, " ")
-
-  // Capitalize first letter of each sentence
-  result = result.replace(
-    SENTENCE_START_REGEX,
-    (_, prefix, letter) => prefix + letter.toUpperCase()
-  )
-
-  // Ensure first character is capitalized
-  result = result.charAt(0).toUpperCase() + result.slice(1)
-
-  // Add period at end if missing punctuation
-  if (result && !ENDS_WITH_PUNCTUATION_REGEX.test(result)) {
-    result += "."
-  }
-
-  // Fix common patterns: double spaces, space before punctuation
-  result = result.replace(SPACE_BEFORE_PUNCTUATION_REGEX, "$1")
-  result = result.replace(MULTIPLE_SPACES_REGEX, " ")
-
-  // Capitalize "I" when standalone
-  result = result.replace(STANDALONE_I_REGEX, "I")
-
-  return result
-}
-
 // Hook to manage AI panel state - either local (isolated) or from store (shared)
 function useAiPanelState(useLocalState: boolean) {
   // Local state for isolated panels (Reviewer Agent)
@@ -343,6 +168,15 @@ After thorough review of the submitted journal entry and supporting documentatio
 **APPROVED** - This journal entry is ready for posting. The preparer has adequately addressed all quality check items and provided sufficient supporting documentation. The minor items identified during preparation have been resolved or appropriately documented.
 
 **Reviewer Notes:** The variance analysis and supporting explanations demonstrate appropriate due diligence. No material concerns identified.`
+
+const MOCK_POLISH_RESPONSE = `Please analyze the following journal entry for compliance with month-end close procedures:
+
+- **Verify** all account balances reconcile to supporting documentation
+- **Confirm** variance explanations are within acceptable thresholds
+- **Review** intercompany eliminations for proper matching
+- **Validate** cutoff procedures were followed correctly
+
+Flag any discrepancies or items requiring additional review before final approval.`
 
 // Extracted component to avoid nested ternary
 function GenerateButtonContent({
@@ -545,12 +379,11 @@ export function AiPromptPanel({
     setShowPolishDialog(true)
     setPolishStreamedText("")
 
-    // Enhanced mock polish with visible transformations
-    const polishedVersion = polishText(prompt)
-    setPolishedText(polishedVersion)
+    // Use hardcoded polished response for demo
+    setPolishedText(MOCK_POLISH_RESPONSE)
 
     // Use quick stream with thinking delay for polish dialog
-    const controller = simulateQuickStream(polishedVersion, setPolishStreamedText, () =>
+    const controller = simulateQuickStream(MOCK_POLISH_RESPONSE, setPolishStreamedText, () =>
       setIsPolishing(false)
     )
     // Set thinking to false when streaming starts (after the built-in delay)
@@ -796,7 +629,7 @@ export function AiPromptPanel({
 
       {/* Polish Writing Dialog */}
       <Dialog onOpenChange={setShowPolishDialog} open={showPolishDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Wand2 className="h-5 w-5 text-primary" />
@@ -810,7 +643,9 @@ export function AiPromptPanel({
           <div className="space-y-4 py-4">
             <div>
               <div className="mb-1.5 font-medium text-muted-foreground text-xs">Original</div>
-              <div className="rounded-md border bg-muted/30 p-3 text-sm">{prompt}</div>
+              <div className="max-h-[80px] overflow-y-auto rounded-md border bg-muted/30 p-3 text-sm">
+                {prompt}
+              </div>
             </div>
 
             <div>
@@ -818,7 +653,7 @@ export function AiPromptPanel({
                 Polished
                 {isPolishing && <Loader2 className="h-3 w-3 animate-spin" />}
               </div>
-              <div className="min-h-[60px] rounded-md border bg-primary/5 p-3 text-sm">
+              <div className="min-h-[140px] rounded-md border bg-primary/5 p-3 text-sm">
                 {isPolishThinking ? (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -828,12 +663,12 @@ export function AiPromptPanel({
                     </span>
                   </div>
                 ) : (
-                  <>
-                    {polishStreamedText}
+                  <div className="relative">
+                    <MarkdownDisplay content={polishStreamedText} />
                     {isPolishing && (
                       <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-primary" />
                     )}
-                  </>
+                  </div>
                 )}
               </div>
             </div>

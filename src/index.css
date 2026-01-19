@@ -101,10 +101,56 @@
   }
 }
 
-/* Toast success icon styling */
+/* Toast animations and styling */
 @layer utilities {
   [data-sonner-toast][data-type="success"] [data-icon] {
     color: hsl(142.1 76.2% 36.3%);
+  }
+
+  [data-sonner-toast][data-type="error"] [data-icon] {
+    color: hsl(0 84.2% 60.2%);
+  }
+
+  /* Toast slide-in animation */
+  @keyframes toast-slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-toast-slide-in {
+    animation: toast-slide-in 0.3s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  }
+
+  /* Button press feedback */
+  .btn-press {
+    transition: transform 0.1s ease;
+  }
+
+  .btn-press:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* Success pulse animation */
+  @keyframes success-pulse {
+    0% {
+      box-shadow: 0 0 0 0 hsl(142.1 76.2% 36.3% / 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 8px hsl(142.1 76.2% 36.3% / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 hsl(142.1 76.2% 36.3% / 0);
+    }
+  }
+
+  .animate-success-pulse {
+    animation: success-pulse 0.6s ease-out;
   }
 }
 

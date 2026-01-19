@@ -152,10 +152,14 @@ function ReplyItem({
   const handleAccept = async () => {
     if (reply.isAccepted) {
       await unacceptReply(threadId, reply.id)
-      toast.success("Answer unaccepted")
+      toast.success("Answer unaccepted", {
+        description: "Reply is no longer marked as accepted",
+      })
     } else {
       await acceptReply(threadId, reply.id)
-      toast.success("Answer accepted")
+      toast.success("Answer accepted", {
+        description: "Reply marked as the accepted answer",
+      })
     }
   }
 
@@ -259,7 +263,9 @@ function ReplyInput({ threadId }: { threadId: string }) {
     await addReply(threadId, content.trim(), attachments)
     setContent("")
     setAttachments([])
-    toast.success("Reply added")
+    toast.success("Reply sent", {
+      description: "Your reply has been added to the thread",
+    })
   }
 
   return (
@@ -334,10 +340,14 @@ function ThreadDetail({ thread }: { thread: Thread }) {
   const handleStatusToggle = async () => {
     if (thread.status === "open") {
       await resolveThread(thread.id)
-      toast.success("Thread resolved")
+      toast.success("Thread resolved", {
+        description: "Discussion marked as complete",
+      })
     } else {
       await reopenThread(thread.id)
-      toast.success("Thread reopened")
+      toast.success("Thread reopened", {
+        description: "Discussion is now active again",
+      })
     }
   }
 
@@ -475,7 +485,9 @@ function NewThreadDialog({
     setTitle("")
     setDescription("")
     onOpenChange(false)
-    toast.success("Thread created")
+    toast.success("Thread created", {
+      description: "New discussion started",
+    })
   }
 
   const handleClose = () => {

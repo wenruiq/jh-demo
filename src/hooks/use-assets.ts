@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import {
   approveAsset,
   completeEbsUpload,
@@ -40,6 +41,14 @@ export function useValidateAsset() {
     onSuccess: (data, assetId) => {
       queryClient.setQueryData(["asset", assetId], data)
       queryClient.invalidateQueries({ queryKey: ["assets"] })
+      toast.success("Validation complete", {
+        description: "Ready for submission",
+      })
+    },
+    onError: () => {
+      toast.error("Validation failed", {
+        description: "Please check the entry and try again",
+      })
     },
   })
 }
@@ -53,6 +62,14 @@ export function useSubmitForReview() {
     onSuccess: (data, assetId) => {
       queryClient.setQueryData(["asset", assetId], data)
       queryClient.invalidateQueries({ queryKey: ["assets"] })
+      toast.success("Submitted for review", {
+        description: "Entry is now pending reviewer approval",
+      })
+    },
+    onError: () => {
+      toast.error("Submission failed", {
+        description: "Please try again",
+      })
     },
   })
 }
@@ -66,6 +83,14 @@ export function useApproveAsset() {
     onSuccess: (data, assetId) => {
       queryClient.setQueryData(["asset", assetId], data)
       queryClient.invalidateQueries({ queryKey: ["assets"] })
+      toast.success("Entry approved", {
+        description: "Proceeding to EBS upload",
+      })
+    },
+    onError: () => {
+      toast.error("Approval failed", {
+        description: "Please try again",
+      })
     },
   })
 }
@@ -79,6 +104,14 @@ export function useCompleteEbsUpload() {
     onSuccess: (data, assetId) => {
       queryClient.setQueryData(["asset", assetId], data)
       queryClient.invalidateQueries({ queryKey: ["assets"] })
+      toast.success("Upload complete", {
+        description: "Entry successfully posted to EBS",
+      })
+    },
+    onError: () => {
+      toast.error("Upload failed", {
+        description: "Please try again",
+      })
     },
   })
 }
@@ -93,6 +126,14 @@ export function useRejectAsset() {
     onSuccess: (data, variables) => {
       queryClient.setQueryData(["asset", variables.assetId], data)
       queryClient.invalidateQueries({ queryKey: ["assets"] })
+      toast.success("Entry returned", {
+        description: "Sent back to preparer for revision",
+      })
+    },
+    onError: () => {
+      toast.error("Action failed", {
+        description: "Please try again",
+      })
     },
   })
 }
@@ -106,6 +147,14 @@ export function useReverseAsset() {
     onSuccess: (data, assetId) => {
       queryClient.setQueryData(["asset", assetId], data)
       queryClient.invalidateQueries({ queryKey: ["assets"] })
+      toast.success("Entry reversed", {
+        description: "Workflow has been reset",
+      })
+    },
+    onError: () => {
+      toast.error("Reverse failed", {
+        description: "Please try again",
+      })
     },
   })
 }
@@ -119,6 +168,14 @@ export function useRevertAsset() {
     onSuccess: (data, assetId) => {
       queryClient.setQueryData(["asset", assetId], data)
       queryClient.invalidateQueries({ queryKey: ["assets"] })
+      toast.success("Reverted to preparation", {
+        description: "You can now make changes",
+      })
+    },
+    onError: () => {
+      toast.error("Revert failed", {
+        description: "Please try again",
+      })
     },
   })
 }

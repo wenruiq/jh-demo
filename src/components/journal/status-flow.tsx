@@ -88,11 +88,13 @@ export function StatusFlow({ asset, className }: StatusFlowProps) {
                 <div
                   className={cn(
                     "flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all duration-300",
-                    state === "completed" && "border-primary bg-primary text-primary-foreground",
-                    state === "active" && "border-primary bg-primary/10 text-primary",
+                    state === "completed" &&
+                      "scale-100 border-primary bg-primary text-primary-foreground",
+                    state === "active" &&
+                      "border-primary bg-primary/10 text-primary shadow-[0_0_0_4px_hsl(var(--color-primary)/0.15)]",
                     state === "loading" && "border-primary bg-primary/10 text-primary",
                     state === "pending" &&
-                      "border-muted-foreground/30 bg-muted text-muted-foreground/50"
+                      "scale-95 border-muted-foreground/30 bg-muted text-muted-foreground/50"
                   )}
                 >
                   <StepIcon Icon={Icon} state={state} />

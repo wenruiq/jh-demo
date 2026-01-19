@@ -213,7 +213,7 @@ export function ProgressSummary({ readonly = false }: ProgressSummaryProps) {
       />
       <ProgressCard
         description={getFindingsStatusDescription(findingsStatus)}
-        icon={<Sparkles className="h-5 w-5" />}
+        icon={<Sparkles className="h-5 w-5 animate-pulse" />}
         label="Summary & Key Findings"
         value={getFindingsStatusLabel(findingsStatus)}
         variant={getFindingsStatusVariant(findingsStatus)}

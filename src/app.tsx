@@ -38,22 +38,25 @@ function App() {
   return (
     <MainLayout>
       <Toaster
-        duration={2500}
+        duration={2000}
         expand={false}
+        gap={8}
+        offset={16}
         position="top-right"
+        richColors={false}
         theme={theme}
         toastOptions={{
           classNames: {
             toast:
-              "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border group-[.toaster]:border-border group-[.toaster]:shadow-lg group-[.toaster]:rounded-lg",
+              "group toast group-[.toaster]:bg-card group-[.toaster]:text-card-foreground group-[.toaster]:border group-[.toaster]:border-border group-[.toaster]:shadow-md group-[.toaster]:rounded-md",
             description: "group-[.toast]:text-muted-foreground text-xs",
             actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
             cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-            success:
-              "group-[.toast]:border-success/20 group-[.toast]:bg-success/5 [&_[data-icon]]:text-success",
-            error: "group-[.toast]:border-destructive/20 group-[.toast]:bg-destructive/5",
+            success: "[&_[data-icon]]:text-success",
+            error: "[&_[data-icon]]:text-destructive",
           },
         }}
+        visibleToasts={3}
       />
       <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-4 py-2">
         <div className="flex items-center gap-3">

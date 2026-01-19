@@ -324,7 +324,9 @@ export function AiPromptPanel({
       })
       setIsAdopting(false)
       setIsEditingResponse(false)
-      toast.success("Findings adopted")
+      toast.success("Findings adopted", {
+        description: "Summary added to cover sheet",
+      })
     }, 600)
   }, [streamedContent, isStreaming, isAdopting, setAdoptedFindings])
 

@@ -44,7 +44,7 @@ export function DashboardView() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <DashboardFilterRow onRefresh={handleRefresh} />
+      <DashboardFilterRow data={filteredAssets} onRefresh={handleRefresh} />
       <DashboardMetricsRow metrics={metrics} />
       <DashboardTable data={filteredAssets} isLoading={isLoading} />
     </div>

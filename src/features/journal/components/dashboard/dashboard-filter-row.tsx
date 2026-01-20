@@ -1,4 +1,5 @@
 import { Download, RefreshCw, Search, X } from "lucide-react"
+import { useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -9,11 +10,80 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useDashboardStore } from "../../state/dashboard-store"
-import type { ColumnFilters } from "../../types/dashboard"
+import type { ColumnFilters, DashboardAsset } from "../../types/dashboard"
 import { TeamProjectSelect } from "./team-project-select"
 
 interface DashboardFilterRowProps {
+  data: DashboardAsset[]
   onRefresh: () => void
+}
+
+// Format assignee for CSV export
+function formatAssigneeForCsv(assignee: DashboardAsset["preparer"]): string {
+  if (assignee.teamAssignment) {
+    return `${assignee.teamAssignment.team} / ${assignee.teamAssignment.project}`
+  }
+  if (assignee.users && assignee.users.length > 0) {
+    return assignee.users.map((u) => u.fullname).join("; ")
+  }
+  return ""
+}
+
+// Escape CSV field (handle quotes and commas)
+function escapeCsvField(value: string): string {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    return `"${value.replace(/"/g, '""')}"`
+  }
+  return value
+}
+
+// Convert data to CSV and trigger download
+function exportToCsv(data: DashboardAsset[], period: string): void {
+  const headers = [
+    "Entity",
+    "Name",
+    "Due Date",
+    "Progress",
+    "Status",
+    "Type",
+    "Frequency",
+    "Preparer",
+    "Reviewer",
+    "Cover Sheet",
+    "System",
+    "Manual",
+    "Adjustment",
+    "Reverse",
+  ]
+
+  const rows = data.map((asset) => [
+    escapeCsvField(asset.entity),
+    escapeCsvField(asset.name),
+    escapeCsvField(new Date(asset.dueDate).toLocaleString()),
+    escapeCsvField(asset.progress.replace("_", " ")),
+    escapeCsvField(asset.status),
+    escapeCsvField(asset.type),
+    escapeCsvField(asset.frequency),
+    escapeCsvField(formatAssigneeForCsv(asset.preparer)),
+    escapeCsvField(formatAssigneeForCsv(asset.reviewer)),
+    asset.coverSheetCompleted ? "Yes" : "No",
+    asset.isSystem ? "Yes" : "No",
+    asset.isManual ? "Yes" : "No",
+    asset.adjustment ? "Yes" : "No",
+    asset.reverse ? "Yes" : "No",
+  ])
+
+  const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n")
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = `journal-entries-${period}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 const DEFAULT_PERIOD = "2025-12"
@@ -41,9 +111,13 @@ function hasActiveColumnFilters(columnFilters: ColumnFilters): boolean {
   )
 }
 
-export function DashboardFilterRow({ onRefresh }: DashboardFilterRowProps) {
+export function DashboardFilterRow({ data, onRefresh }: DashboardFilterRowProps) {
   const { filters, sorting, setTeamProjects, setPeriod, setSearchQuery, resetFilters } =
     useDashboardStore()
+
+  const handleExport = useCallback(() => {
+    exportToCsv(data, filters.period)
+  }, [data, filters.period])
 
   // Check if any filters or sorting are active (differ from defaults)
   const hasActiveFiltersOrSort =
@@ -95,7 +169,7 @@ export function DashboardFilterRow({ onRefresh }: DashboardFilterRowProps) {
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="outline">
+        <Button disabled={data.length === 0} onClick={handleExport} size="sm" variant="outline">
           <Download className="mr-1.5 h-4 w-4" />
           Export Data
         </Button>

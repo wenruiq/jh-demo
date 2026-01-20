@@ -12,6 +12,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  FileSearch,
   ListFilter,
   Minus,
   X,
@@ -33,6 +34,7 @@ import {
   ASSET_STATUSES,
   ASSET_TYPES,
   ENTITIES,
+  extractUniqueAssignees,
   FREQUENCY_OPTIONS,
 } from "../../data/mock-dashboard-data"
 import { useDashboardStore } from "../../state/dashboard-store"
@@ -44,6 +46,7 @@ import {
   type ProgressStatus,
 } from "../../types/dashboard"
 import { AssigneeCell } from "./assignee-cell"
+import { AssigneeFilterHeader } from "./assignee-filter-header"
 
 // Status badge variant mapping - blue for all active, secondary for uploaded
 const STATUS_VARIANTS: Record<AssetStatus, "blue" | "secondary"> = {
@@ -252,7 +255,10 @@ function formatDateTime(dateStr: string): string {
 }
 
 // Hook to create columns with filter functionality
-function useFilterableColumns(): ColumnDef<DashboardAsset>[] {
+function useFilterableColumns(
+  availableUsers: Array<{ type: "user"; id: string; label: string }>,
+  availableTeams: Array<{ type: "team"; id: string; label: string }>
+): ColumnDef<DashboardAsset>[] {
   const {
     filters,
     setEntityFilter,
@@ -354,12 +360,28 @@ function useFilterableColumns(): ColumnDef<DashboardAsset>[] {
     },
     {
       accessorKey: "preparer",
-      header: "Preparer",
+      header: () => (
+        <AssigneeFilterHeader
+          availableTeams={availableTeams}
+          availableUsers={availableUsers}
+          column="preparer"
+          filter={cf.preparer}
+          label="Preparer"
+        />
+      ),
       cell: ({ row }) => <AssigneeCell assignee={row.original.preparer} />,
     },
     {
       accessorKey: "reviewer",
-      header: "Reviewer",
+      header: () => (
+        <AssigneeFilterHeader
+          availableTeams={availableTeams}
+          availableUsers={availableUsers}
+          column="reviewer"
+          filter={cf.reviewer}
+          label="Reviewer"
+        />
+      ),
       cell: ({ row }) => <AssigneeCell assignee={row.original.reviewer} />,
     },
     {
@@ -427,7 +449,11 @@ interface DashboardTableProps {
 
 export function DashboardTable({ data, isLoading }: DashboardTableProps) {
   const { sorting, setSorting } = useDashboardStore()
-  const columns = useFilterableColumns()
+
+  // Extract unique users and teams from the actual data for filter options
+  const { users: availableUsers, teams: availableTeams } = extractUniqueAssignees(data)
+
+  const columns = useFilterableColumns(availableUsers, availableTeams)
 
   const table = useReactTable({
     data,
@@ -491,30 +517,51 @@ export function DashboardTable({ data, isLoading }: DashboardTableProps) {
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr className="border-b transition-colors hover:bg-muted/30" key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td className="whitespace-nowrap px-3 py-2.5" key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td className="py-16" colSpan={columns.length}>
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="mb-3 rounded-full bg-muted p-3">
+                      <FileSearch className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="font-medium text-foreground">No results found</p>
+                    <p className="mt-1 max-w-sm text-muted-foreground text-sm">
+                      No journals match your current filters. Try adjusting your search or filter
+                      criteria.
+                    </p>
+                  </div>
+                </td>
               </tr>
-            ))}
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr className="border-b transition-colors hover:bg-muted/30" key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <td className="whitespace-nowrap px-3 py-2.5" key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       <div className="flex items-center justify-between border-t px-4 py-2">
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <span>
-            Showing{" "}
-            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
-            {Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-              data.length
-            )}{" "}
-            of {data.length} entries
-          </span>
+          {data.length === 0 ? (
+            <span>No entries</span>
+          ) : (
+            <span>
+              Showing{" "}
+              {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
+              {Math.min(
+                (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                data.length
+              )}{" "}
+              of {data.length} entries
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">

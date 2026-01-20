@@ -40,6 +40,23 @@ export interface DashboardAsset {
   reverse: boolean
 }
 
+// Assignee filter types
+export type AssigneeFilterType = "all" | "users" | "teams"
+
+// Selected assignee for filtering
+export interface AssigneeFilterSelection {
+  type: "user" | "team"
+  id: string // For users: unique ID, for teams: "team/project" key
+  label: string // Display name
+}
+
+// Assignee filter state
+export interface AssigneeFilter {
+  filterType: AssigneeFilterType
+  selections: AssigneeFilterSelection[]
+  searchQuery: string
+}
+
 // Column filter state for individual table columns
 export interface ColumnFilters {
   entity: string[]
@@ -47,6 +64,8 @@ export interface ColumnFilters {
   status: AssetStatus[]
   progress: ProgressStatus[]
   frequency: Frequency[]
+  preparer: AssigneeFilter
+  reviewer: AssigneeFilter
   coverSheetCompleted: boolean | null
   isSystem: boolean | null
   isManual: boolean | null

@@ -18,6 +18,11 @@ interface DashboardFilterRowProps {
 
 const DEFAULT_PERIOD = "2025-12"
 
+// Check if assignee filter is active
+function hasActiveAssigneeFilter(filter: ColumnFilters["preparer"]): boolean {
+  return filter.filterType !== "all" || filter.selections.length > 0
+}
+
 // Check if column filters have any active values
 function hasActiveColumnFilters(columnFilters: ColumnFilters): boolean {
   return (
@@ -26,6 +31,8 @@ function hasActiveColumnFilters(columnFilters: ColumnFilters): boolean {
     columnFilters.status.length > 0 ||
     columnFilters.progress.length > 0 ||
     columnFilters.frequency.length > 0 ||
+    hasActiveAssigneeFilter(columnFilters.preparer) ||
+    hasActiveAssigneeFilter(columnFilters.reviewer) ||
     columnFilters.coverSheetCompleted !== null ||
     columnFilters.isSystem !== null ||
     columnFilters.isManual !== null ||

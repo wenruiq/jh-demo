@@ -24,6 +24,10 @@ const PARAM = {
   STATUS: "status",
   PROGRESS: "progress",
   FREQUENCY: "frequency",
+  PREPARER: "preparer",
+  PREPARER_TYPE: "preparerType",
+  REVIEWER: "reviewer",
+  REVIEWER_TYPE: "reviewerType",
   COVER_SHEET: "coverSheet",
   SYSTEM: "system",
   MANUAL: "manual",
@@ -62,6 +66,61 @@ function parsePagination(params: URLSearchParams): { page?: number; pageSize?: n
   }
 }
 
+// Parse assignee filter from URL
+// Format: "u:Wei Chen,t:Singapore/EC-Logistic" where u: is user, t: is team
+function parseAssigneeFilter(
+  selectionsParam: string | null,
+  typeParam: string | null
+): Partial<{
+  filterType: "all" | "users" | "teams"
+  selections: Array<{ type: "user" | "team"; id: string; label: string }>
+  searchQuery: string
+}> {
+  const result: Partial<{
+    filterType: "all" | "users" | "teams"
+    selections: Array<{ type: "user" | "team"; id: string; label: string }>
+    searchQuery: string
+  }> = {}
+
+  if (typeParam && ["all", "users", "teams"].includes(typeParam)) {
+    result.filterType = typeParam as "all" | "users" | "teams"
+  }
+
+  if (selectionsParam) {
+    const selections: Array<{ type: "user" | "team"; id: string; label: string }> = []
+    for (const part of selectionsParam.split(",")) {
+      if (part.startsWith("u:")) {
+        const label = part.slice(2)
+        selections.push({ type: "user", id: `user-${label}`, label })
+      } else if (part.startsWith("t:")) {
+        const label = part.slice(2)
+        // For teams, the id is the team/project key
+        selections.push({ type: "team", id: label, label: label.replace("/", " / ") })
+      }
+    }
+    if (selections.length > 0) {
+      result.selections = selections
+    }
+  }
+
+  return result
+}
+
+// Serialize assignee filter selections for URL
+function serializeAssigneeSelections(
+  selections: Array<{ type: "user" | "team"; id: string; label: string }>
+): string {
+  return selections
+    .map((s) => {
+      if (s.type === "user") {
+        return `u:${s.label}`
+      }
+      // For teams, use the id (team/project key)
+      return `t:${s.id}`
+    })
+    .join(",")
+}
+
 // Parse column filters from URL
 function parseColumnFilters(params: URLSearchParams): Partial<ColumnFilters> {
   const filters: Partial<ColumnFilters> = {}
@@ -89,6 +148,31 @@ function parseColumnFilters(params: URLSearchParams): Partial<ColumnFilters> {
   const frequency = params.get(PARAM.FREQUENCY)
   if (frequency) {
     filters.frequency = frequency.split(",") as Frequency[]
+  }
+
+  // Assignee filters
+  const preparerFilter = parseAssigneeFilter(
+    params.get(PARAM.PREPARER),
+    params.get(PARAM.PREPARER_TYPE)
+  )
+  if (Object.keys(preparerFilter).length > 0) {
+    filters.preparer = {
+      filterType: preparerFilter.filterType ?? "all",
+      selections: preparerFilter.selections ?? [],
+      searchQuery: "",
+    }
+  }
+
+  const reviewerFilter = parseAssigneeFilter(
+    params.get(PARAM.REVIEWER),
+    params.get(PARAM.REVIEWER_TYPE)
+  )
+  if (Object.keys(reviewerFilter).length > 0) {
+    filters.reviewer = {
+      filterType: reviewerFilter.filterType ?? "all",
+      selections: reviewerFilter.selections ?? [],
+      searchQuery: "",
+    }
   }
 
   // Boolean filters
@@ -150,6 +234,55 @@ function parseFilters(params: URLSearchParams): Partial<DashboardFilters> {
   return filters
 }
 
+// Serialize column filters to URL params
+function serializeColumnFilters(cf: ColumnFilters, params: URLSearchParams): void {
+  if (cf.entity.length > 0) {
+    params.set(PARAM.ENTITY, cf.entity.join(","))
+  }
+  if (cf.type.length > 0) {
+    params.set(PARAM.TYPE, cf.type.join(","))
+  }
+  if (cf.status.length > 0) {
+    params.set(PARAM.STATUS, cf.status.join(","))
+  }
+  if (cf.progress.length > 0) {
+    params.set(PARAM.PROGRESS, cf.progress.join(","))
+  }
+  if (cf.frequency.length > 0) {
+    params.set(PARAM.FREQUENCY, cf.frequency.join(","))
+  }
+  // Preparer filter
+  if (cf.preparer.filterType !== "all") {
+    params.set(PARAM.PREPARER_TYPE, cf.preparer.filterType)
+  }
+  if (cf.preparer.selections.length > 0) {
+    params.set(PARAM.PREPARER, serializeAssigneeSelections(cf.preparer.selections))
+  }
+  // Reviewer filter
+  if (cf.reviewer.filterType !== "all") {
+    params.set(PARAM.REVIEWER_TYPE, cf.reviewer.filterType)
+  }
+  if (cf.reviewer.selections.length > 0) {
+    params.set(PARAM.REVIEWER, serializeAssigneeSelections(cf.reviewer.selections))
+  }
+  // Boolean filters
+  if (cf.coverSheetCompleted !== null) {
+    params.set(PARAM.COVER_SHEET, String(cf.coverSheetCompleted))
+  }
+  if (cf.isSystem !== null) {
+    params.set(PARAM.SYSTEM, String(cf.isSystem))
+  }
+  if (cf.isManual !== null) {
+    params.set(PARAM.MANUAL, String(cf.isManual))
+  }
+  if (cf.adjustment !== null) {
+    params.set(PARAM.ADJUSTMENT, String(cf.adjustment))
+  }
+  if (cf.reverse !== null) {
+    params.set(PARAM.REVERSE, String(cf.reverse))
+  }
+}
+
 // Build URL params from state
 function buildUrlParams(state: {
   viewMode: ViewMode
@@ -181,37 +314,7 @@ function buildUrlParams(state: {
   }
 
   // Column filters
-  const cf = state.filters.columnFilters
-  if (cf.entity.length > 0) {
-    params.set(PARAM.ENTITY, cf.entity.join(","))
-  }
-  if (cf.type.length > 0) {
-    params.set(PARAM.TYPE, cf.type.join(","))
-  }
-  if (cf.status.length > 0) {
-    params.set(PARAM.STATUS, cf.status.join(","))
-  }
-  if (cf.progress.length > 0) {
-    params.set(PARAM.PROGRESS, cf.progress.join(","))
-  }
-  if (cf.frequency.length > 0) {
-    params.set(PARAM.FREQUENCY, cf.frequency.join(","))
-  }
-  if (cf.coverSheetCompleted !== null) {
-    params.set(PARAM.COVER_SHEET, String(cf.coverSheetCompleted))
-  }
-  if (cf.isSystem !== null) {
-    params.set(PARAM.SYSTEM, String(cf.isSystem))
-  }
-  if (cf.isManual !== null) {
-    params.set(PARAM.MANUAL, String(cf.isManual))
-  }
-  if (cf.adjustment !== null) {
-    params.set(PARAM.ADJUSTMENT, String(cf.adjustment))
-  }
-  if (cf.reverse !== null) {
-    params.set(PARAM.REVERSE, String(cf.reverse))
-  }
+  serializeColumnFilters(state.filters.columnFilters, params)
 
   // Sorting
   if (state.sorting.length > 0) {
@@ -271,6 +374,22 @@ function applyColumnFiltersToStore(
   }
   if (cf.frequency) {
     actions.setFrequencyFilter(cf.frequency)
+  }
+  if (cf.preparer) {
+    if (cf.preparer.filterType) {
+      actions.setAssigneeFilterType("preparer", cf.preparer.filterType)
+    }
+    if (cf.preparer.selections) {
+      actions.setAssigneeSelections("preparer", cf.preparer.selections)
+    }
+  }
+  if (cf.reviewer) {
+    if (cf.reviewer.filterType) {
+      actions.setAssigneeFilterType("reviewer", cf.reviewer.filterType)
+    }
+    if (cf.reviewer.selections) {
+      actions.setAssigneeSelections("reviewer", cf.reviewer.selections)
+    }
   }
   if (cf.coverSheetCompleted !== undefined) {
     actions.setBooleanFilter("coverSheetCompleted", cf.coverSheetCompleted)

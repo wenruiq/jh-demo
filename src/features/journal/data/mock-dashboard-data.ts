@@ -140,7 +140,7 @@ export function generateMockAssets(count: number, period: string): DashboardAsse
       { value: "PREPARATION" as const, weight: 1 },
       { value: "SUBMISSION" as const, weight: 1 },
       { value: "REVIEW" as const, weight: 1 },
-      { value: "EBS_UPLOAD" as const, weight: 6 },
+      { value: "EBS_UPLOAD" as const, weight: 4 },
     ])
     const dueDate = generateDueDate(period)
     const isSystem = faker.datatype.boolean()
@@ -229,6 +229,64 @@ function applyBooleanFilter(
   return assets.filter((asset) => accessor(asset) === filterValue)
 }
 
+// Check if assignee matches type filter
+function matchesTypeFilter(assignee: Assignee, filterType: string): boolean {
+  if (filterType === "all") {
+    return true
+  }
+  if (filterType === "users") {
+    return !!assignee.users && assignee.users.length > 0
+  }
+  if (filterType === "teams") {
+    return !!assignee.teamAssignment
+  }
+  return true
+}
+
+// Check if assignee matches a single selection
+function matchesSelection(
+  assignee: Assignee,
+  selection: { type: string; id: string; label: string }
+): boolean {
+  if (selection.type === "team" && assignee.teamAssignment) {
+    const teamKey = `${assignee.teamAssignment.team}/${assignee.teamAssignment.project}`
+    return teamKey === selection.id
+  }
+  if (selection.type === "user" && assignee.users) {
+    return assignee.users.some((user) =>
+      user.fullname.toLowerCase().includes(selection.label.toLowerCase())
+    )
+  }
+  return false
+}
+
+// Check if an assignee matches the filter
+function assigneeMatchesFilter(assignee: Assignee, filter: ColumnFilters["preparer"]): boolean {
+  // If no selections, check filter type only
+  if (filter.selections.length === 0) {
+    return matchesTypeFilter(assignee, filter.filterType)
+  }
+
+  // Check if any selection matches
+  return filter.selections.some((selection) => matchesSelection(assignee, selection))
+}
+
+// Apply assignee column filter
+function applyAssigneeFilter(
+  assets: DashboardAsset[],
+  filter: ColumnFilters["preparer"] | undefined,
+  accessor: (asset: DashboardAsset) => Assignee
+): DashboardAsset[] {
+  if (!filter) {
+    return assets
+  }
+  if (filter.filterType === "all" && filter.selections.length === 0) {
+    return assets
+  }
+
+  return assets.filter((asset) => assigneeMatchesFilter(accessor(asset), filter))
+}
+
 // Apply column filters to assets
 function applyColumnFilters(
   assets: DashboardAsset[],
@@ -240,12 +298,65 @@ function applyColumnFilters(
   result = applyArrayFilter(result, cf.status, (a) => a.status)
   result = applyArrayFilter(result, cf.progress, (a) => a.progress)
   result = applyArrayFilter(result, cf.frequency, (a) => a.frequency)
+  result = applyAssigneeFilter(result, cf.preparer, (a) => a.preparer)
+  result = applyAssigneeFilter(result, cf.reviewer, (a) => a.reviewer)
   result = applyBooleanFilter(result, cf.coverSheetCompleted, (a) => a.coverSheetCompleted)
   result = applyBooleanFilter(result, cf.isSystem, (a) => a.isSystem)
   result = applyBooleanFilter(result, cf.isManual, (a) => a.isManual)
   result = applyBooleanFilter(result, cf.adjustment, (a) => a.adjustment)
   result = applyBooleanFilter(result, cf.reverse, (a) => a.reverse)
   return result
+}
+
+// Helper: Extract users from an assignee into the map
+function extractUsersFromAssignee(
+  assignee: Assignee,
+  usersMap: Map<string, { type: "user"; id: string; label: string }>
+): void {
+  if (!assignee.users) {
+    return
+  }
+  for (const user of assignee.users) {
+    if (!usersMap.has(user.id)) {
+      usersMap.set(user.id, { type: "user", id: user.id, label: user.fullname })
+    }
+  }
+}
+
+// Helper: Extract team from an assignee into the map
+function extractTeamFromAssignee(
+  assignee: Assignee,
+  teamsMap: Map<string, { type: "team"; id: string; label: string }>
+): void {
+  if (!assignee.teamAssignment) {
+    return
+  }
+  const ta = assignee.teamAssignment
+  const key = `${ta.team}/${ta.project}`
+  if (!teamsMap.has(key)) {
+    teamsMap.set(key, { type: "team", id: key, label: `${ta.team} / ${ta.project}` })
+  }
+}
+
+// Extract unique users from assets for filter options
+export function extractUniqueAssignees(assets: DashboardAsset[]): {
+  users: Array<{ type: "user"; id: string; label: string }>
+  teams: Array<{ type: "team"; id: string; label: string }>
+} {
+  const usersMap = new Map<string, { type: "user"; id: string; label: string }>()
+  const teamsMap = new Map<string, { type: "team"; id: string; label: string }>()
+
+  for (const asset of assets) {
+    extractUsersFromAssignee(asset.preparer, usersMap)
+    extractTeamFromAssignee(asset.preparer, teamsMap)
+    extractUsersFromAssignee(asset.reviewer, usersMap)
+    extractTeamFromAssignee(asset.reviewer, teamsMap)
+  }
+
+  return {
+    users: Array.from(usersMap.values()).sort((a, b) => a.label.localeCompare(b.label)),
+    teams: Array.from(teamsMap.values()).sort((a, b) => a.label.localeCompare(b.label)),
+  }
 }
 
 // Filter assets based on criteria

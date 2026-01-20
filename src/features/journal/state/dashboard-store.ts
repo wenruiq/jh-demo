@@ -2,6 +2,8 @@ import type { SortingState, Updater } from "@tanstack/react-table"
 import { create } from "zustand"
 import type { AssetStatus, AssetType } from "../types"
 import type {
+  AssigneeFilterSelection,
+  AssigneeFilterType,
   ColumnFilters,
   DashboardFilters,
   Frequency,
@@ -9,8 +11,18 @@ import type {
   TeamProject,
 } from "../types/dashboard"
 
+export type { AssigneeFilterSelection, AssigneeFilterType } from "../types/dashboard"
+
+type AssigneeColumn = "preparer" | "reviewer"
+
 export const VIEW_MODES = ["list", "dashboard"] as const
 export type ViewMode = (typeof VIEW_MODES)[number]
+
+const DEFAULT_ASSIGNEE_FILTER = {
+  filterType: "all" as const,
+  selections: [],
+  searchQuery: "",
+}
 
 const DEFAULT_COLUMN_FILTERS: ColumnFilters = {
   entity: [],
@@ -18,6 +30,8 @@ const DEFAULT_COLUMN_FILTERS: ColumnFilters = {
   status: [],
   progress: [],
   frequency: [],
+  preparer: { ...DEFAULT_ASSIGNEE_FILTER },
+  reviewer: { ...DEFAULT_ASSIGNEE_FILTER },
   coverSheetCompleted: null,
   isSystem: null,
   isManual: null,
@@ -44,6 +58,12 @@ interface DashboardStore {
   setStatusFilter: (statuses: AssetStatus[]) => void
   setProgressFilter: (progress: ProgressStatus[]) => void
   setFrequencyFilter: (frequencies: Frequency[]) => void
+  setAssigneeFilterType: (column: AssigneeColumn, filterType: AssigneeFilterType) => void
+  setAssigneeSelections: (column: AssigneeColumn, selections: AssigneeFilterSelection[]) => void
+  addAssigneeSelection: (column: AssigneeColumn, selection: AssigneeFilterSelection) => void
+  removeAssigneeSelection: (column: AssigneeColumn, selectionId: string) => void
+  setAssigneeSearchQuery: (column: AssigneeColumn, query: string) => void
+  clearAssigneeFilter: (column: AssigneeColumn) => void
   setBooleanFilter: (
     key: "coverSheetCompleted" | "isSystem" | "isManual" | "adjustment" | "reverse",
     value: boolean | null
@@ -149,6 +169,90 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
       filters: {
         ...state.filters,
         columnFilters: { ...state.filters.columnFilters, frequency: frequencies },
+      },
+      pagination: { ...state.pagination, page: 1 },
+    })),
+
+  setAssigneeFilterType: (column, filterType) =>
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        columnFilters: {
+          ...state.filters.columnFilters,
+          [column]: { ...state.filters.columnFilters[column], filterType },
+        },
+      },
+      pagination: { ...state.pagination, page: 1 },
+    })),
+
+  setAssigneeSelections: (column, selections) =>
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        columnFilters: {
+          ...state.filters.columnFilters,
+          [column]: { ...state.filters.columnFilters[column], selections },
+        },
+      },
+      pagination: { ...state.pagination, page: 1 },
+    })),
+
+  addAssigneeSelection: (column, selection) =>
+    set((state) => {
+      const current = state.filters.columnFilters[column]
+      const exists = current.selections.some((s) => s.id === selection.id)
+      if (exists) {
+        return state
+      }
+      return {
+        filters: {
+          ...state.filters,
+          columnFilters: {
+            ...state.filters.columnFilters,
+            [column]: { ...current, selections: [...current.selections, selection] },
+          },
+        },
+        pagination: { ...state.pagination, page: 1 },
+      }
+    }),
+
+  removeAssigneeSelection: (column, selectionId) =>
+    set((state) => {
+      const current = state.filters.columnFilters[column]
+      return {
+        filters: {
+          ...state.filters,
+          columnFilters: {
+            ...state.filters.columnFilters,
+            [column]: {
+              ...current,
+              selections: current.selections.filter((s) => s.id !== selectionId),
+            },
+          },
+        },
+        pagination: { ...state.pagination, page: 1 },
+      }
+    }),
+
+  setAssigneeSearchQuery: (column, searchQuery) =>
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        columnFilters: {
+          ...state.filters.columnFilters,
+          [column]: { ...state.filters.columnFilters[column], searchQuery },
+        },
+      },
+    })),
+
+  clearAssigneeFilter: (column) =>
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        columnFilters: {
+          ...state.filters.columnFilters,
+          [column]: { ...DEFAULT_ASSIGNEE_FILTER },
+        },
       },
       pagination: { ...state.pagination, page: 1 },
     })),

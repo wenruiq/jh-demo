@@ -11,7 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { ListViewLoading, ViewLoading } from "@/components/ui/view-loading"
 import { useAssetDetail, useAssets } from "@/features/journal/api/queries"
+import { useUrlSync } from "@/features/journal/hooks/use-url-sync"
 import { useDashboardStore, type ViewMode } from "@/features/journal/state/dashboard-store"
 import { useJournalStore } from "@/features/journal/state/journal-store"
 import { useThemeStore } from "@/shared/state/theme-store"
@@ -37,6 +39,9 @@ export function AppShell() {
   const { selectedAssetId, setSelectedAssetId } = useJournalStore()
   const { viewMode, setViewMode } = useDashboardStore()
   const theme = useThemeStore((state) => state.theme)
+
+  // Sync URL with dashboard state
+  useUrlSync()
 
   const { data: assetsResponse, isLoading: isLoadingAssets } = useAssets()
   const assets = assetsResponse?.data ?? []
@@ -110,13 +115,7 @@ export function AppShell() {
           </Button>
         </div>
       </div>
-      <Suspense
-        fallback={
-          <div className="flex flex-1 items-center justify-center">
-            <div className="text-muted-foreground">Loading...</div>
-          </div>
-        }
-      >
+      <Suspense fallback={viewMode === "list" ? <ListViewLoading /> : <ViewLoading />}>
         {viewMode === "list" ? (
           <div className="flex flex-1 overflow-hidden">
             <JournalListPanel

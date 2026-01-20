@@ -77,11 +77,58 @@ function getDefaultUploads(): DataUpload[] {
   ]
 }
 
+// Pre-populated uploads for asset-002 (Q4 Accounts Receivable Adjustment) - all files uploaded
+function getAsset002Uploads(): DataUpload[] {
+  return [
+    {
+      id: "asset002-system-1",
+      name: "AR Aging Report",
+      type: "Supporting Data (System)",
+      description: "Accounts Receivable aging report from ERP system with customer breakdown",
+      fileName: "AR_Aging_Q4_2025.xlsx",
+      uploadedAt: "2025-01-18T09:30:00Z",
+    },
+    {
+      id: "asset002-manual-1",
+      name: "Customer Payment History",
+      type: "Supporting Data (Manual)",
+      description: "Historical payment patterns for top 50 customers used in allowance calculation",
+      fileName: "Customer_Payment_History_2025.csv",
+      uploadedAt: "2025-01-18T10:15:00Z",
+    },
+    {
+      id: "asset002-raw-1",
+      name: "Invoice Transaction Detail",
+      type: "Raw Data",
+      description: "Detailed invoice transactions for Q4 2025 from billing system",
+      fileName: "invoice_transactions_q4_2025.parquet",
+      uploadedAt: "2025-01-18T08:45:00Z",
+    },
+    {
+      id: "asset002-manual-2",
+      name: "Bad Debt Allowance Calculation",
+      type: "Supporting Data (Manual)",
+      description: "Workpaper showing calculation methodology for bad debt allowance adjustment",
+      fileName: "Bad_Debt_Allowance_Calc_Q4.xlsx",
+      uploadedAt: "2025-01-19T11:20:00Z",
+    },
+  ]
+}
+
+// Initial uploads pre-populated for specific assets
+const INITIAL_UPLOADS: Record<string, DataUpload[]> = {
+  "asset-002": getAsset002Uploads(),
+}
+
 // Simulate API delay for demo realism
 const simulateApiDelay = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms))
 
+function getUploadsForAssetId(assetId: string): DataUpload[] {
+  return INITIAL_UPLOADS[assetId] ?? getDefaultUploads()
+}
+
 export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
-  uploadsByAssetId: {},
+  uploadsByAssetId: { ...INITIAL_UPLOADS },
   loading: {
     addUpload: false,
     deleteUpload: null,
@@ -96,7 +143,7 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
       set((state) => ({
         uploadsByAssetId: {
           ...state.uploadsByAssetId,
-          [assetId]: getDefaultUploads(),
+          [assetId]: getUploadsForAssetId(assetId),
         },
       }))
     }
@@ -106,14 +153,14 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
     const uploads = get().uploadsByAssetId[assetId]
     if (!uploads) {
       // Initialize synchronously for first access
-      const defaultUploads = getDefaultUploads()
+      const assetUploads = getUploadsForAssetId(assetId)
       set((state) => ({
         uploadsByAssetId: {
           ...state.uploadsByAssetId,
-          [assetId]: defaultUploads,
+          [assetId]: assetUploads,
         },
       }))
-      return defaultUploads
+      return assetUploads
     }
     return uploads
   },
@@ -128,7 +175,7 @@ export const useDataUploadStore = create<DataUploadStore>((set, get) => ({
       id: generateId(),
     }
     set((state) => {
-      const existingUploads = state.uploadsByAssetId[assetId] ?? getDefaultUploads()
+      const existingUploads = state.uploadsByAssetId[assetId] ?? getUploadsForAssetId(assetId)
       return {
         uploadsByAssetId: {
           ...state.uploadsByAssetId,

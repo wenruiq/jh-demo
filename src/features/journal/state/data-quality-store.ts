@@ -185,6 +185,89 @@ function getDefaultChecks(): QualityCheck[] {
   ]
 }
 
+// Pre-populated checks for asset-002 (Q4 Accounts Receivable Adjustment) - realistic mix of passes and user-attested overrides
+function getAsset002Checks(): QualityCheck[] {
+  return [
+    {
+      id: "asset002-qc-1",
+      assertion: "Completeness",
+      title: "AR Aging Completeness Check",
+      type: "System Check",
+      description:
+        "Validates that all customer accounts are included in the AR aging report and no receivable balances are missing from the adjustment calculation.",
+      systemResult: "Pass",
+      systemResultExplanation:
+        "All 1,247 customer accounts verified. Total AR balance of $3,456,789.12 reconciles to GL. No missing accounts detected.",
+      acknowledged: true,
+    },
+    {
+      id: "asset002-qc-2",
+      assertion: "Accuracy",
+      title: "Bad Debt Allowance Calculation",
+      type: "AI Check",
+      description:
+        "AI-powered verification of the bad debt allowance calculation methodology and resulting adjustment amounts against historical collection rates.",
+      prompt:
+        "Verify the bad debt allowance calculation in @Bad Debt Allowance Calculation against historical payment data in @Customer Payment History",
+      systemResult: "Failed",
+      aiResult:
+        "Variance detected: Bad debt allowance of $127,450 differs from AI-calculated estimate of $142,300 based on @Customer Payment History. The 10.4% difference exceeds the 5% threshold. Recommend review of aging bucket assumptions.",
+      userResult: "Pass",
+      attestation:
+        "Reviewed with Finance Manager. The $14,850 variance is due to a one-time bulk payment received from Customer ABC Corp on Dec 28 that improved their aging category. This was a known timing difference and the $127,450 allowance is appropriate. Supporting email from FM attached.",
+      acknowledged: true,
+    },
+    {
+      id: "asset002-qc-3",
+      assertion: "Valuation",
+      title: "AR Valuation Assessment",
+      type: "System Check",
+      description:
+        "Verifies that accounts receivable balances are stated at net realizable value after considering the allowance for doubtful accounts.",
+      systemResult: "Failed",
+      systemResultExplanation:
+        "Warning: 3 customer accounts totaling $45,230 have balances exceeding credit limits. Account #4521 ($28,100), Account #7834 ($12,400), Account #9012 ($4,730). Review required per Credit Policy 3.2.",
+      userResult: "Pass",
+      attestation:
+        "Investigated all 3 flagged accounts. Account #4521 has approved credit limit extension (see approval memo CL-2025-089). Accounts #7834 and #9012 are on payment plans with first installments received Jan 2. All balances deemed collectible.",
+      acknowledged: true,
+    },
+    {
+      id: "asset002-qc-4",
+      assertion: "Existence",
+      title: "Customer Account Verification",
+      type: "Manual Check",
+      description:
+        "Manual verification that sampled customer accounts with significant balances represent valid, existing customer relationships with supporting documentation.",
+      systemResult: "Failed",
+      systemResultExplanation: "Awaiting manual verification by user.",
+      userResult: "Pass",
+      attestation:
+        "Verified top 20 customer accounts representing 65% of total AR balance. All accounts confirmed as active customers with valid contracts on file. Sample testing completed per audit workpaper AR-3.",
+      acknowledged: true,
+    },
+    {
+      id: "asset002-qc-5",
+      assertion: "Cutoff",
+      title: "Period-End Cutoff Verification",
+      type: "AI Check",
+      description:
+        "AI analysis to ensure all Q4 2025 invoices are properly recorded in the correct period and no subsequent period transactions are included.",
+      prompt:
+        "Analyze invoice dates in @Invoice Transaction Detail to verify proper period cutoff for Q4 2025",
+      systemResult: "Pass",
+      aiResult:
+        "All 892 invoices in @Invoice Transaction Detail fall within Q4 2025 (Oct 1 - Dec 31, 2025). No invoices dated after Dec 31, 2025 detected. Revenue recognition timing verified against shipping/delivery dates.",
+      acknowledged: true,
+    },
+  ]
+}
+
+// Initial checks pre-populated for specific assets
+const INITIAL_CHECKS: Record<string, QualityCheck[]> = {
+  "asset-002": getAsset002Checks(),
+}
+
 // Helper to derive card status from system and user results
 export function getCardStatus(check: QualityCheck): CardStatus {
   if (check.systemResult === "Pass") {
@@ -201,8 +284,12 @@ export function isCheckPassed(check: QualityCheck): boolean {
   return check.systemResult === "Pass" || check.userResult === "Pass"
 }
 
+function getChecksForAssetId(assetId: string): QualityCheck[] {
+  return INITIAL_CHECKS[assetId] ?? getDefaultChecks()
+}
+
 export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
-  checksByAssetId: {},
+  checksByAssetId: { ...INITIAL_CHECKS },
   loading: {
     addCheck: false,
     acknowledge: null,
@@ -224,7 +311,7 @@ export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
       set((state) => ({
         checksByAssetId: {
           ...state.checksByAssetId,
-          [assetId]: getDefaultChecks(),
+          [assetId]: getChecksForAssetId(assetId),
         },
       }))
     }
@@ -233,14 +320,14 @@ export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
   getChecksForAsset: (assetId: string) => {
     const checks = get().checksByAssetId[assetId]
     if (!checks) {
-      const defaultChecks = getDefaultChecks()
+      const assetChecks = getChecksForAssetId(assetId)
       set((state) => ({
         checksByAssetId: {
           ...state.checksByAssetId,
-          [assetId]: defaultChecks,
+          [assetId]: assetChecks,
         },
       }))
-      return defaultChecks
+      return assetChecks
     }
     return checks
   },
@@ -278,7 +365,7 @@ export const useDataQualityStore = create<DataQualityStore>((set, get) => ({
     }
 
     set((state) => {
-      const existingChecks = state.checksByAssetId[assetId] ?? getDefaultChecks()
+      const existingChecks = state.checksByAssetId[assetId] ?? getChecksForAssetId(assetId)
       return {
         checksByAssetId: {
           ...state.checksByAssetId,

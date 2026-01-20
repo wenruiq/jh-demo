@@ -170,7 +170,14 @@ function getFindingsStatusVariant(status: FindingsStatus): "success" | "warning"
 export function ProgressSummary({ readonly = false }: ProgressSummaryProps) {
   const { uploaded, total: uploadTotal } = useDataUploadProgress()
   const { done: checksDone, total: checksTotal } = useQualityCheckProgress()
+  const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
+  const setFindingsAssetId = useAiFindingsStore((state) => state.setSelectedAssetId)
   const findingsStatus = useAiFindingsStore((state) => state.getStatus())
+
+  // Sync selected asset ID to findings store
+  useEffect(() => {
+    setFindingsAssetId(selectedAssetId)
+  }, [selectedAssetId, setFindingsAssetId])
 
   return (
     <div className={cn("flex gap-3 p-4", readonly && "opacity-80")}>

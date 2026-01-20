@@ -5,11 +5,20 @@ import { MonthlyTrendChart } from "@/features/journal/components/sections/monthl
 import { MarkdownDisplay } from "@/features/journal/components/shared/markdown-display"
 import { SectionContainer } from "@/features/journal/components/shared/section-container"
 import { useAiFindingsStore } from "@/features/journal/state/ai-findings-store"
+import { useJournalStore } from "@/features/journal/state/journal-store"
 
 const FALLBACK_CONTENT = "*Key findings have not been generated.*"
 
 export function SummarySection() {
-  const { adoptedFindings, setAdoptedFindings } = useAiFindingsStore()
+  const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
+  const setFindingsAssetId = useAiFindingsStore((state) => state.setSelectedAssetId)
+  const adoptedFindings = useAiFindingsStore((state) => state.getAdoptedFindings())
+  const setAdoptedFindings = useAiFindingsStore((state) => state.setAdoptedFindings)
+
+  // Sync selected asset ID to findings store
+  useEffect(() => {
+    setFindingsAssetId(selectedAssetId)
+  }, [selectedAssetId, setFindingsAssetId])
 
   const hasAdoptedContent = adoptedFindings !== null
   const [isEditing, setIsEditing] = useState(false)

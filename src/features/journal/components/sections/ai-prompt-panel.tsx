@@ -21,6 +21,7 @@ import {
 import { MarkdownDisplay } from "@/features/journal/components/shared/markdown-display"
 import { SectionContainer } from "@/features/journal/components/shared/section-container"
 import { useAiFindingsStore } from "@/features/journal/state/ai-findings-store"
+import { useJournalStore } from "@/features/journal/state/journal-store"
 import {
   type StreamController,
   simulateQuickStream,
@@ -32,9 +33,18 @@ function useAiPanelState(useLocalState: boolean) {
   const [localPrompt, setLocalPrompt] = useState("")
   const [localResponse, setLocalResponse] = useState("")
   const [localIsStreaming, setLocalIsStreaming] = useState(false)
+  const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
+  const setFindingsAssetId = useAiFindingsStore((state) => state.setSelectedAssetId)
   const store = useAiFindingsStore()
   const noop = useCallback(() => undefined, [])
   const resetLocal = useCallback(() => setLocalResponse(""), [])
+
+  // Sync selected asset ID to findings store
+  useEffect(() => {
+    if (!useLocalState) {
+      setFindingsAssetId(selectedAssetId)
+    }
+  }, [selectedAssetId, setFindingsAssetId, useLocalState])
 
   if (useLocalState) {
     return {
@@ -51,9 +61,9 @@ function useAiPanelState(useLocalState: boolean) {
   }
 
   return {
-    prompt: store.currentPrompt,
+    prompt: store.getCurrentPrompt(),
     setPrompt: store.setCurrentPrompt,
-    streamedContent: store.currentResponse,
+    streamedContent: store.getCurrentResponse(),
     setStreamedContent: store.setCurrentResponse,
     isStreaming: store.isStreaming,
     setIsStreaming: store.setIsStreaming,

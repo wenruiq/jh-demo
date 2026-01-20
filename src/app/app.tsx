@@ -1,5 +1,5 @@
 import { ChevronRight, Plus } from "lucide-react"
-import { useEffect } from "react"
+import { lazy, Suspense, useEffect } from "react"
 import { Toaster } from "sonner"
 import { MainLayout } from "@/app/layout/main-layout"
 import { Button } from "@/components/ui/button"
@@ -10,14 +10,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useAssetDetail, useAssets } from "@/features/journal/api/queries"
-import { JournalDetailPanel } from "@/features/journal/components/journal-detail-panel"
-import { JournalListPanel } from "@/features/journal/components/journal-list-panel"
+import { useDashboardStore, type ViewMode } from "@/features/journal/state/dashboard-store"
 import { useJournalStore } from "@/features/journal/state/journal-store"
 import { useThemeStore } from "@/shared/state/theme-store"
 
+// Lazy load heavy view components for code splitting
+const DashboardView = lazy(() =>
+  import("@/features/journal/components/dashboard/dashboard-view").then((m) => ({
+    default: m.DashboardView,
+  }))
+)
+const JournalDetailPanel = lazy(() =>
+  import("@/features/journal/components/journal-detail-panel").then((m) => ({
+    default: m.JournalDetailPanel,
+  }))
+)
+const JournalListPanel = lazy(() =>
+  import("@/features/journal/components/journal-list-panel").then((m) => ({
+    default: m.JournalListPanel,
+  }))
+)
+
 export function AppShell() {
   const { selectedAssetId, setSelectedAssetId } = useJournalStore()
+  const { viewMode, setViewMode } = useDashboardStore()
   const theme = useThemeStore((state) => state.theme)
 
   const { data: assetsResponse, isLoading: isLoadingAssets } = useAssets()
@@ -31,6 +49,12 @@ export function AppShell() {
       setSelectedAssetId(assets[0].id)
     }
   }, [assets, selectedAssetId, setSelectedAssetId])
+
+  const handleViewModeChange = (value: string) => {
+    if (value) {
+      setViewMode(value as ViewMode)
+    }
+  }
 
   return (
     <MainLayout>
@@ -61,39 +85,59 @@ export function AppShell() {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">Journal Entry</span>
           </div>
-          <Select defaultValue="2025-12">
-            <SelectTrigger className="h-8 w-32">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025-12">2025-12</SelectItem>
-              <SelectItem value="2025-11">2025-11</SelectItem>
-              <SelectItem value="2025-10">2025-10</SelectItem>
-              <SelectItem value="2025-09">2025-09</SelectItem>
-            </SelectContent>
-          </Select>
+          {viewMode === "list" && (
+            <Select defaultValue="2025-12">
+              <SelectTrigger className="h-8 w-32">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2025-12">2025-12</SelectItem>
+                <SelectItem value="2025-11">2025-11</SelectItem>
+                <SelectItem value="2025-10">2025-10</SelectItem>
+                <SelectItem value="2025-09">2025-09</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
-        <Button size="sm">
-          <Plus className="mr-1 h-4 w-4" />
-          Journal Entry
-        </Button>
+        <div className="flex items-center gap-3">
+          <ToggleGroup onValueChange={handleViewModeChange} type="single" value={viewMode}>
+            <ToggleGroupItem value="list">List</ToggleGroupItem>
+            <ToggleGroupItem value="dashboard">Dashboard</ToggleGroupItem>
+          </ToggleGroup>
+          <Button size="sm">
+            <Plus className="mr-1 h-4 w-4" />
+            Journal Entry
+          </Button>
+        </div>
       </div>
-      <div className="flex flex-1 overflow-hidden">
-        <JournalListPanel
-          assets={assets}
-          isLoading={isLoadingAssets}
-          onSelect={setSelectedAssetId}
-          selectedId={selectedAssetId}
-        />
-        <JournalDetailPanel
-          asset={selectedAsset}
-          isLoading={
-            isLoadingAssets ||
-            (isLoadingDetail && !!selectedAssetId) ||
-            (assets.length > 0 && !selectedAssetId)
-          }
-        />
-      </div>
+      <Suspense
+        fallback={
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-muted-foreground">Loading...</div>
+          </div>
+        }
+      >
+        {viewMode === "list" ? (
+          <div className="flex flex-1 overflow-hidden">
+            <JournalListPanel
+              assets={assets}
+              isLoading={isLoadingAssets}
+              onSelect={setSelectedAssetId}
+              selectedId={selectedAssetId}
+            />
+            <JournalDetailPanel
+              asset={selectedAsset}
+              isLoading={
+                isLoadingAssets ||
+                (isLoadingDetail && !!selectedAssetId) ||
+                (assets.length > 0 && !selectedAssetId)
+              }
+            />
+          </div>
+        ) : (
+          <DashboardView />
+        )}
+      </Suspense>
     </MainLayout>
   )
 }

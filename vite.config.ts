@@ -37,6 +37,7 @@ export default defineConfig({
           "vendor-icons": ["lucide-react"],
           "vendor-query": ["@tanstack/react-query"],
           "vendor-state": ["zustand", "sonner"],
+          "vendor-table": ["@tanstack/react-table"],
         },
       },
     },

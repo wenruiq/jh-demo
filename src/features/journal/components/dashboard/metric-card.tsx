@@ -4,7 +4,7 @@ interface MetricCardProps {
   label: string
   value: string | number
   subtext?: string
-  variant?: "default" | "blue" | "warning" | "destructive"
+  variant?: "default" | "blue" | "warning" | "destructive" | "success"
   className?: string
 }
 
@@ -13,6 +13,7 @@ const valueStyles = {
   blue: "text-info",
   warning: "text-warning",
   destructive: "text-destructive",
+  success: "text-success",
 }
 
 export function MetricCard({

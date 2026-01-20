@@ -12,8 +12,9 @@ export function DashboardMetricsRow({ metrics }: DashboardMetricsRowProps) {
       <div className="flex items-center gap-8">
         <MetricCard
           label="Completion"
-          subtext={`(${metrics.completed}/${metrics.total} journals)`}
+          subtext={`(${metrics.completed}/${metrics.total})`}
           value={`${metrics.completionPercent}%`}
+          variant="success"
         />
         <MetricCard label="In Progress" value={metrics.inProgress} variant="blue" />
         <MetricCard label="Due Soon" value={metrics.dueSoon} variant="warning" />
@@ -22,18 +23,18 @@ export function DashboardMetricsRow({ metrics }: DashboardMetricsRowProps) {
       <div className="flex items-center gap-6">
         <DonutChart
           label="On Time"
-          subtext={`(${metrics.onTimeCount}/${metrics.completed} journals)`}
+          subtext={`(${metrics.onTimeCount}/${metrics.completed})`}
           value={metrics.onTimePercent}
         />
         <DonutChart
-          label="Automation"
-          subtext={`(${metrics.automationCount}/${metrics.total} journals)`}
-          value={metrics.automationPercent}
+          label="Cover Sheet"
+          subtext={`(${metrics.coverSheetCount}/${metrics.total})`}
+          value={metrics.coverSheetPercent}
         />
         <DonutChart
-          label="Cover Sheet"
-          subtext={`(${metrics.coverSheetCount}/${metrics.total} journals)`}
-          value={metrics.coverSheetPercent}
+          label="Automation"
+          subtext={`(${metrics.automationCount}/${metrics.total})`}
+          value={metrics.automationPercent}
         />
       </div>
     </div>

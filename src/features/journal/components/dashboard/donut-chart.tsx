@@ -4,9 +4,10 @@ interface DonutChartProps {
   value: number
   label: string
   size?: number
+  subtext?: string // Optional subtext shown below the label (e.g., "12 / 15 journals")
 }
 
-export function DonutChart({ value, label, size = 80 }: DonutChartProps) {
+export function DonutChart({ value, label, size = 80, subtext }: DonutChartProps) {
   const id = useId()
   const [mounted, setMounted] = useState(false)
 
@@ -69,6 +70,10 @@ export function DonutChart({ value, label, size = 80 }: DonutChartProps) {
         </div>
       </div>
       <span className="text-muted-foreground text-xs">{label}</span>
+      {/* Always reserve space for subtext to maintain consistent height across charts */}
+      <span className={`text-[10px] ${subtext ? "text-muted-foreground" : "invisible"}`}>
+        {subtext || "\u00A0"}
+      </span>
     </div>
   )
 }

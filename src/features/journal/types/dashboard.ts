@@ -28,6 +28,7 @@ export interface DashboardAsset {
   type: AssetType
   status: AssetStatus
   dueDate: string
+  completedAt?: string // Timestamp when status became EBS_UPLOAD (only for completed journals)
   progress: ProgressStatus
   frequency: Frequency
   businessOwner: TeamProject
@@ -89,7 +90,8 @@ export interface DashboardMetrics {
   dueSoon: number
   overdue: number
   completionPercent: number
-  onTimePercent: number
+  onTimeCount: number // Number of completed journals that finished before due date
+  onTimePercent: number // Percentage of completed journals that were on time
   automationPercent: number
   coverSheetPercent: number
 }

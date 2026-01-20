@@ -20,7 +20,11 @@ export function DashboardMetricsRow({ metrics }: DashboardMetricsRowProps) {
         <MetricCard label="Overdue" value={metrics.overdue} variant="destructive" />
       </div>
       <div className="flex items-center gap-6">
-        <DonutChart label="On Time" value={metrics.onTimePercent} />
+        <DonutChart
+          label="On Time"
+          subtext={`(${metrics.onTimeCount}/${metrics.completed} journals)`}
+          value={metrics.onTimePercent}
+        />
         <DonutChart label="Automation" value={metrics.automationPercent} />
         <DonutChart label="Cover Sheet" value={metrics.coverSheetPercent} />
       </div>

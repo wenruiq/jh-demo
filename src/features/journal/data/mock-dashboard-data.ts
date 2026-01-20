@@ -90,6 +90,31 @@ function generateDueDate(period: string): string {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`
 }
 
+// Generate a completion timestamp relative to the due date
+// About 70% should be on-time (before due date), 30% late (after due date)
+function generateCompletedAt(dueDate: string): string {
+  const due = new Date(dueDate)
+  const isOnTime = faker.datatype.boolean({ probability: 0.7 })
+
+  if (isOnTime) {
+    // Complete 1-5 days before due date
+    const daysBefore = faker.number.int({ min: 1, max: 5 })
+    const completedDate = new Date(due)
+    completedDate.setDate(completedDate.getDate() - daysBefore)
+    // Random hour during work day
+    completedDate.setHours(faker.number.int({ min: 9, max: 18 }))
+    completedDate.setMinutes(faker.helpers.arrayElement([0, 15, 30, 45]))
+    return completedDate.toISOString().slice(0, 19)
+  }
+  // Complete 1-3 days after due date (late)
+  const daysAfter = faker.number.int({ min: 1, max: 3 })
+  const completedDate = new Date(due)
+  completedDate.setDate(completedDate.getDate() + daysAfter)
+  completedDate.setHours(faker.number.int({ min: 9, max: 18 }))
+  completedDate.setMinutes(faker.helpers.arrayElement([0, 15, 30, 45]))
+  return completedDate.toISOString().slice(0, 19)
+}
+
 // Determine progress status based on due date and completion
 function determineProgress(dueDate: string, status: AssetStatus, period: string): ProgressStatus {
   // Use a reference date based on the period (simulate viewing at the end of the month)
@@ -153,6 +178,7 @@ export function generateMockAssets(count: number, period: string): DashboardAsse
       type: faker.helpers.arrayElement(ASSET_TYPES),
       status,
       dueDate,
+      completedAt: isCompleted ? generateCompletedAt(dueDate) : undefined,
       progress: determineProgress(dueDate, status, period),
       frequency: faker.helpers.arrayElement(FREQUENCY_OPTIONS),
       businessOwner: generateTeamProject(),
@@ -175,14 +201,22 @@ export const MOCK_DASHBOARD_ASSETS: DashboardAsset[] = generateMockAssets(28, "2
 // Calculate metrics from assets
 export function calculateMetrics(assets: DashboardAsset[]): DashboardMetrics {
   const total = assets.length
-  const completed = assets.filter((a) => a.progress === "completed").length
+  const completedAssets = assets.filter((a) => a.progress === "completed")
+  const completed = completedAssets.length
   const inProgress = assets.filter((a) => a.progress === "in_progress").length
   const dueSoon = assets.filter((a) => a.progress === "due_soon").length
   const overdue = assets.filter((a) => a.progress === "overdue").length
 
   // On-time: completed journals that were uploaded before due date
-  const onTimeCount = assets.filter((a) => a.progress === "completed").length
-  const onTimePercent = total > 0 ? Math.round((onTimeCount / total) * 100) : 0
+  // A journal is "on time" if completedAt < dueDate
+  const onTimeCount = completedAssets.filter((a) => {
+    if (!a.completedAt) {
+      return false
+    }
+    return new Date(a.completedAt) < new Date(a.dueDate)
+  }).length
+  // On-time percentage is out of completed journals, not total
+  const onTimePercent = completed > 0 ? Math.round((onTimeCount / completed) * 100) : 0
 
   // Automation: system entries vs total
   const systemCount = assets.filter((a) => a.isSystem).length
@@ -199,6 +233,7 @@ export function calculateMetrics(assets: DashboardAsset[]): DashboardMetrics {
     dueSoon,
     overdue,
     completionPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+    onTimeCount,
     onTimePercent,
     automationPercent,
     coverSheetPercent,

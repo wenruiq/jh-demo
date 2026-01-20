@@ -439,6 +439,15 @@ function useFilterableColumns(
       ),
       cell: ({ row }) => <CheckCell checked={row.original.reverse} />,
     },
+    {
+      accessorKey: "completedAt",
+      header: "Completed At",
+      cell: ({ row }) => (
+        <span className="text-sm">
+          {row.original.completedAt ? formatDateTime(row.original.completedAt) : "—"}
+        </span>
+      ),
+    },
   ]
 }
 

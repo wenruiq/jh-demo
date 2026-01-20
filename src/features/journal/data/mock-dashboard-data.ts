@@ -218,9 +218,9 @@ export function calculateMetrics(assets: DashboardAsset[]): DashboardMetrics {
   // On-time percentage is out of completed journals, not total
   const onTimePercent = completed > 0 ? Math.round((onTimeCount / completed) * 100) : 0
 
-  // Automation: system entries vs total
-  const systemCount = assets.filter((a) => a.isSystem).length
-  const automationPercent = total > 0 ? Math.round((systemCount / total) * 100) : 0
+  // Automation: system entries vs total (isSystem = true means automated)
+  const automationCount = assets.filter((a) => a.isSystem).length
+  const automationPercent = total > 0 ? Math.round((automationCount / total) * 100) : 0
 
   // Cover sheet: journals with cover sheet completed
   const coverSheetCount = assets.filter((a) => a.coverSheetCompleted).length
@@ -235,7 +235,9 @@ export function calculateMetrics(assets: DashboardAsset[]): DashboardMetrics {
     completionPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
     onTimeCount,
     onTimePercent,
+    automationCount,
     automationPercent,
+    coverSheetCount,
     coverSheetPercent,
   }
 }

@@ -92,6 +92,8 @@ export interface DashboardMetrics {
   completionPercent: number
   onTimeCount: number // Number of completed journals that finished before due date
   onTimePercent: number // Percentage of completed journals that were on time
+  automationCount: number // Number of system (automated) journals
   automationPercent: number
+  coverSheetCount: number // Number of journals with cover sheet completed
   coverSheetPercent: number
 }

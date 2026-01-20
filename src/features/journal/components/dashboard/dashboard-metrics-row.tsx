@@ -25,8 +25,16 @@ export function DashboardMetricsRow({ metrics }: DashboardMetricsRowProps) {
           subtext={`(${metrics.onTimeCount}/${metrics.completed} journals)`}
           value={metrics.onTimePercent}
         />
-        <DonutChart label="Automation" value={metrics.automationPercent} />
-        <DonutChart label="Cover Sheet" value={metrics.coverSheetPercent} />
+        <DonutChart
+          label="Automation"
+          subtext={`(${metrics.automationCount}/${metrics.total} journals)`}
+          value={metrics.automationPercent}
+        />
+        <DonutChart
+          label="Cover Sheet"
+          subtext={`(${metrics.coverSheetCount}/${metrics.total} journals)`}
+          value={metrics.coverSheetPercent}
+        />
       </div>
     </div>
   )

@@ -47,9 +47,13 @@ import { cn } from "@/shared/lib/utils"
 
 interface DataUploadSectionProps {
   readonly?: boolean
+  defaultOpen?: boolean
 }
 
-export function DataUploadSection({ readonly = false }: DataUploadSectionProps) {
+export function DataUploadSection({
+  readonly = false,
+  defaultOpen = true,
+}: DataUploadSectionProps) {
   const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
   const uploadsByAssetId = useDataUploadStore((state) => state.uploadsByAssetId)
   const initializeAsset = useDataUploadStore((state) => state.initializeAsset)
@@ -100,6 +104,7 @@ export function DataUploadSection({ readonly = false }: DataUploadSectionProps) 
 
   return (
     <SectionContainer
+      defaultOpen={defaultOpen}
       headerAction={
         !readonly && <AddDataUploadDialog isLoading={loading.addUpload} onAdd={handleAddUpload} />
       }

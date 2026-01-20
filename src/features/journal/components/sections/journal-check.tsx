@@ -21,9 +21,10 @@ import { cn } from "@/shared/lib/utils"
 
 interface JournalCheckProps {
   readonly?: boolean
+  defaultOpen?: boolean
 }
 
-export function JournalCheck({ readonly = false }: JournalCheckProps) {
+export function JournalCheck({ readonly = false, defaultOpen = true }: JournalCheckProps) {
   const selectedAssetId = useJournalStore((state) => state.selectedAssetId)
   const checksByAssetId = useDataQualityStore((state) => state.checksByAssetId)
   const initializeAsset = useDataQualityStore((state) => state.initializeAsset)
@@ -127,7 +128,7 @@ export function JournalCheck({ readonly = false }: JournalCheckProps) {
   }
 
   return (
-    <SectionContainer title="Journal Checks">
+    <SectionContainer defaultOpen={defaultOpen} title="Journal Checks">
       <div
         className={cn("flex overflow-hidden rounded-lg border", readonly && "opacity-80")}
         style={{ height: "520px" }}

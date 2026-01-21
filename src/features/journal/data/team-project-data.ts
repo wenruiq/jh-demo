@@ -19,7 +19,7 @@ export const TEAM_PROJECT_MAP: Record<Team, Project[]> = {
 
 // Team member with role
 export interface TeamMember extends Identity {
-  role: "Lead" | "Senior" | "Member"
+  role: "Admin" | "Ops" | "Member"
 }
 
 // Mock team members for each team/project combination
@@ -30,14 +30,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "wei.chen",
       fullname: "Wei Chen",
       avatar: "https://i.pravatar.cc/150?u=wei.chen",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "sg-ecl-2",
       username: "mei.lin",
       fullname: "Mei Lin Tan",
       avatar: "https://i.pravatar.cc/150?u=mei.lin",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "sg-ecl-3",
@@ -60,14 +60,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "david.lim",
       fullname: "David Lim",
       avatar: "https://i.pravatar.cc/150?u=david.lim",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "sg-ecm-2",
       username: "jessica.ng",
       fullname: "Jessica Ng",
       avatar: "https://i.pravatar.cc/150?u=jessica.ng",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "sg-ecm-3",
@@ -83,14 +83,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "amanda.lee",
       fullname: "Amanda Lee",
       avatar: "https://i.pravatar.cc/150?u=amanda.lee",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "sg-gct-2",
       username: "kevin.chan",
       fullname: "Kevin Chan",
       avatar: "https://i.pravatar.cc/150?u=kevin.chan",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "sg-gct-3",
@@ -120,14 +120,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "budi.santoso",
       fullname: "Budi Santoso",
       avatar: "https://i.pravatar.cc/150?u=budi.santoso",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "id-ecm-2",
       username: "dewi.putri",
       fullname: "Dewi Putri",
       avatar: "https://i.pravatar.cc/150?u=dewi.putri",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "id-ecm-3",
@@ -143,14 +143,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "rina.wati",
       fullname: "Rina Wati",
       avatar: "https://i.pravatar.cc/150?u=rina.wati",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "id-dfs-2",
       username: "hendra.suharto",
       fullname: "Hendra Suharto",
       avatar: "https://i.pravatar.cc/150?u=hendra.suharto",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "id-dfs-3",
@@ -173,14 +173,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "andi.rahman",
       fullname: "Andi Rahman",
       avatar: "https://i.pravatar.cc/150?u=andi.rahman",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "id-de-2",
       username: "siti.nurhaliza",
       fullname: "Siti Nurhaliza",
       avatar: "https://i.pravatar.cc/150?u=siti.nurhaliza",
-      role: "Senior",
+      role: "Ops",
     },
   ],
   "Thailand/EC-Logistic": [
@@ -189,14 +189,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "somchai.wong",
       fullname: "Somchai Wong",
       avatar: "https://i.pravatar.cc/150?u=somchai.wong",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "th-ecl-2",
       username: "nattaya.sri",
       fullname: "Nattaya Sri",
       avatar: "https://i.pravatar.cc/150?u=nattaya.sri",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "th-ecl-3",
@@ -212,14 +212,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "wichai.pong",
       fullname: "Wichai Pong",
       avatar: "https://i.pravatar.cc/150?u=wichai.pong",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "th-ecm-2",
       username: "supaporn.lee",
       fullname: "Supaporn Lee",
       avatar: "https://i.pravatar.cc/150?u=supaporn.lee",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "th-ecm-3",
@@ -242,7 +242,7 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "narong.suk",
       fullname: "Narong Suk",
       avatar: "https://i.pravatar.cc/150?u=narong.suk",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "th-dfs-2",
@@ -258,14 +258,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "lucas.silva",
       fullname: "Lucas Silva",
       avatar: "https://i.pravatar.cc/150?u=lucas.silva",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "br-ecm-2",
       username: "ana.santos",
       fullname: "Ana Santos",
       avatar: "https://i.pravatar.cc/150?u=ana.santos",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "br-ecm-3",
@@ -281,14 +281,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "maria.oliveira",
       fullname: "Maria Oliveira",
       avatar: "https://i.pravatar.cc/150?u=maria.oliveira",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "br-de-2",
       username: "joao.ferreira",
       fullname: "João Ferreira",
       avatar: "https://i.pravatar.cc/150?u=joao.ferreira",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "br-de-3",
@@ -311,7 +311,7 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "juliana.rocha",
       fullname: "Juliana Rocha",
       avatar: "https://i.pravatar.cc/150?u=juliana.rocha",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "br-fra-2",
@@ -327,21 +327,21 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "james.chen",
       fullname: "James Chen",
       avatar: "https://i.pravatar.cc/150?u=james.chen",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "hq-gct-2",
       username: "emily.zhang",
       fullname: "Emily Zhang",
       avatar: "https://i.pravatar.cc/150?u=emily.zhang",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "hq-gct-3",
       username: "alex.koh",
       fullname: "Alex Koh",
       avatar: "https://i.pravatar.cc/150?u=alex.koh",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "hq-gct-4",
@@ -371,14 +371,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "andrew.wong",
       fullname: "Andrew Wong",
       avatar: "https://i.pravatar.cc/150?u=andrew.wong",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "hq-dfs-2",
       username: "michelle.ong",
       fullname: "Michelle Ong",
       avatar: "https://i.pravatar.cc/150?u=michelle.ong",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "hq-dfs-3",
@@ -394,14 +394,14 @@ export const TEAM_PROJECT_MEMBERS: Record<string, TeamMember[]> = {
       username: "jennifer.chua",
       fullname: "Jennifer Chua",
       avatar: "https://i.pravatar.cc/150?u=jennifer.chua",
-      role: "Lead",
+      role: "Admin",
     },
     {
       id: "hq-fra-2",
       username: "ryan.yeo",
       fullname: "Ryan Yeo",
       avatar: "https://i.pravatar.cc/150?u=ryan.yeo",
-      role: "Senior",
+      role: "Ops",
     },
     {
       id: "hq-fra-3",

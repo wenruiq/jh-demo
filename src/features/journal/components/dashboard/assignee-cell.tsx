@@ -12,8 +12,8 @@ interface AssigneeCellProps {
 
 // Role badge variant mapping
 const ROLE_VARIANTS: Record<TeamMember["role"], "default" | "secondary" | "outline"> = {
-  Lead: "default",
-  Senior: "secondary",
+  Admin: "default",
+  Ops: "secondary",
   Member: "outline",
 }
 

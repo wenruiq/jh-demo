@@ -4,14 +4,10 @@ import { DataUploadSection } from "@/features/journal/components/sections/data-u
 import { JournalCheck } from "@/features/journal/components/sections/journal-check"
 import { ProgressSummary } from "@/features/journal/components/sections/progress-summary"
 import { SummarySection } from "@/features/journal/components/sections/summary-section"
-import { ViewNavButton, ViewNavHeader } from "@/features/journal/components/shared/view-nav-button"
 
 export function ReviewerSummaryView() {
   return (
     <div className="flex flex-col">
-      <ViewNavHeader>
-        <ViewNavButton label="Back to Entry" targetView="journal" />
-      </ViewNavHeader>
       <ProgressSummary />
       <DataUploadSection defaultOpen={false} readonly />
       <JournalCheck defaultOpen={false} readonly />

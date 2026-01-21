@@ -8,7 +8,6 @@ export function ReviewerCoverSheetView() {
   return (
     <div className="flex flex-col">
       <ViewNavHeader>
-        <ViewNavButton label="Back to Entry" targetView="journal" />
         <ViewNavButton label="Back to Summary" targetView="reviewer-summary" variant="return" />
       </ViewNavHeader>
       <ProgressSummary readonly />

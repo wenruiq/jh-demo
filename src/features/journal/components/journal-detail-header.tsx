@@ -1,4 +1,4 @@
-import { ChevronRight, Link, RefreshCw, Settings } from "lucide-react"
+import { ChevronRight, Link, RefreshCw, Settings, Undo2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { type DetailView, useJournalStore } from "@/features/journal/state/journal-store"
@@ -18,7 +18,12 @@ interface JournalDetailHeaderProps {
 
 export function JournalDetailHeader({ asset }: JournalDetailHeaderProps) {
   const detailView = useJournalStore((state) => state.detailView)
+  const setDetailView = useJournalStore((state) => state.setDetailView)
   const viewLabel = VIEW_LABELS[detailView]
+
+  const handleBackToEntry = () => {
+    setDetailView("journal")
+  }
 
   return (
     <div className="flex shrink-0 items-center justify-between border-b bg-background px-4 py-3">
@@ -30,6 +35,15 @@ export function JournalDetailHeader({ asset }: JournalDetailHeaderProps) {
           <>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground text-sm">{viewLabel}</span>
+            <Button
+              className="ml-2 h-7 gap-1.5 px-2.5 text-xs"
+              onClick={handleBackToEntry}
+              size="sm"
+              variant="outline"
+            >
+              <Undo2 className="h-3.5 w-3.5" />
+              Return
+            </Button>
           </>
         )}
       </div>

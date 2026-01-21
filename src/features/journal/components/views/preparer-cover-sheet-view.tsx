@@ -2,14 +2,10 @@ import { AiPromptPanel } from "@/features/journal/components/sections/ai-prompt-
 import { DataUploadSection } from "@/features/journal/components/sections/data-upload-section"
 import { JournalCheck } from "@/features/journal/components/sections/journal-check"
 import { ProgressSummary } from "@/features/journal/components/sections/progress-summary"
-import { ViewNavButton, ViewNavHeader } from "@/features/journal/components/shared/view-nav-button"
 
 export function PreparerCoverSheetView() {
   return (
     <div className="flex flex-col">
-      <ViewNavHeader>
-        <ViewNavButton label="Back to Entry" targetView="journal" />
-      </ViewNavHeader>
       <ProgressSummary />
       <DataUploadSection />
       <JournalCheck />

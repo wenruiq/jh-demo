@@ -52,29 +52,27 @@ export function JournalListPanel({
 }: JournalListPanelProps) {
   return (
     <div className="flex h-full w-80 shrink-0 flex-col border-r">
-      <div className="border-b p-3">
+      <div className="space-y-2 border-b p-2">
         <Tabs className="w-full" defaultValue="all">
-          <TabsList className="w-full">
-            <TabsTrigger className="flex-1" value="pending">
+          <TabsList className="h-9 w-full">
+            <TabsTrigger className="h-8 flex-1 text-sm" value="pending">
               Pending
             </TabsTrigger>
-            <TabsTrigger className="flex-1" value="involved">
+            <TabsTrigger className="h-8 flex-1 text-sm" value="involved">
               Involved
             </TabsTrigger>
-            <TabsTrigger className="flex-1" value="all">
+            <TabsTrigger className="h-8 flex-1 text-sm" value="all">
               All
             </TabsTrigger>
           </TabsList>
         </Tabs>
-      </div>
 
-      <div className="border-b p-3">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-8" placeholder="Search journals..." />
+            <Input className="h-9 pl-9 text-sm" placeholder="Search journals..." />
           </div>
-          <Button size="icon" variant="outline">
+          <Button className="h-9 w-9" size="icon" variant="outline">
             <Filter className="h-4 w-4" />
           </Button>
         </div>

@@ -35,7 +35,7 @@ export function ThreadsTab() {
               New Thread
             </Button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 pb-20">
             {threads.map((thread) => (
               <ThreadListItem
                 isSelected={selectedThreadId === thread.id}

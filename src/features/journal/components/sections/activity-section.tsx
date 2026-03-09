@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SectionContainer } from "@/features/journal/components/shared/section-container"
 import { ThreadsTab } from "@/features/journal/components/threads/threads-tab"
+import { RichThreadsTab } from "@/features/journal/components/threads-rich/threads-tab"
 
 const DEMO_COMMENTS = [
   {
@@ -166,6 +167,9 @@ export function ActivitySection() {
           <TabsTrigger className="text-xs" value="threads">
             Threads
           </TabsTrigger>
+          <TabsTrigger className="text-xs" value="threads-rich">
+            Threads (Rich Text)
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent className="mt-4 pb-16" value="comments">
@@ -226,6 +230,10 @@ export function ActivitySection() {
 
         <TabsContent className="mt-3" value="threads">
           <ThreadsTab />
+        </TabsContent>
+
+        <TabsContent className="mt-3" value="threads-rich">
+          <RichThreadsTab />
         </TabsContent>
       </Tabs>
     </SectionContainer>

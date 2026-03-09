@@ -11,12 +11,13 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { RichTextContent } from "@/components/ui/rich-text-content"
 import { ChangeAssigneeDialog } from "@/features/journal/components/threads/change-assignee-dialog"
-import { ReplyInput } from "@/features/journal/components/threads/reply-input"
-import { ReplyItem } from "@/features/journal/components/threads/reply-item"
 import { formatTimeAgo } from "@/features/journal/components/threads/utils"
+import { RichReplyInput } from "@/features/journal/components/threads-rich/reply-input"
+import { RichReplyItem } from "@/features/journal/components/threads-rich/reply-item"
+import { useRichThreadsStore } from "@/features/journal/state/rich-threads-store"
 import type { Thread, ThreadStatus } from "@/features/journal/state/threads-store"
-import { useThreadsStore } from "@/features/journal/state/threads-store"
 import { cn } from "@/shared/lib/utils"
 
 interface ThreadDetailProps {
@@ -38,10 +39,10 @@ const NEXT_STATUS_LABEL: Record<ThreadStatus, string> = {
   resolved: "Resolved",
 }
 
-export function ThreadDetail({ thread }: ThreadDetailProps) {
+export function RichThreadDetail({ thread }: ThreadDetailProps) {
   const [showAssigneeDialog, setShowAssigneeDialog] = useState(false)
   const { advanceStatus, revertToPending, setSelectedThreadId, changeAssignee, loading } =
-    useThreadsStore()
+    useRichThreadsStore()
   const isAdvancing = loading.resolveThread === thread.id
   const isReverting = loading.reopenThread === thread.id
   const isBusy = isAdvancing || isReverting
@@ -121,7 +122,9 @@ export function ThreadDetail({ thread }: ThreadDetailProps) {
             <span>·</span>
             <span>{formatTimeAgo(thread.createdAt)}</span>
           </div>
-          <p className="mt-3 text-sm">{thread.description}</p>
+          <div className="mt-3">
+            <RichTextContent content={thread.description} />
+          </div>
 
           {/* Thread attachments */}
           {thread.attachments.length > 0 && (
@@ -191,13 +194,13 @@ export function ThreadDetail({ thread }: ThreadDetailProps) {
               </span>
             </div>
             {thread.replies.map((reply) => (
-              <ReplyItem key={reply.id} reply={reply} />
+              <RichReplyItem key={reply.id} reply={reply} />
             ))}
           </div>
         )}
       </div>
 
-      <ReplyInput threadId={thread.id} />
+      <RichReplyInput threadId={thread.id} />
 
       <ChangeAssigneeDialog
         currentAssignee={thread.assignee}

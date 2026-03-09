@@ -9,11 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import {
-  DEMO_USERS,
-  type ThreadAuthor,
-  useThreadsStore,
-} from "@/features/journal/state/threads-store"
+import { DEMO_USERS, type ThreadAuthor } from "@/features/journal/state/threads-store"
 import { cn } from "@/shared/lib/utils"
 
 interface ChangeAssigneeDialogProps {
@@ -21,6 +17,8 @@ interface ChangeAssigneeDialogProps {
   onOpenChange: (open: boolean) => void
   threadId: string
   currentAssignee: ThreadAuthor
+  onChangeAssignee: (threadId: string, assignee: ThreadAuthor) => Promise<void>
+  isChanging: boolean
 }
 
 export function ChangeAssigneeDialog({
@@ -28,10 +26,10 @@ export function ChangeAssigneeDialog({
   onOpenChange,
   threadId,
   currentAssignee,
+  onChangeAssignee,
+  isChanging,
 }: ChangeAssigneeDialogProps) {
   const [search, setSearch] = useState("")
-  const { changeAssignee, loading } = useThreadsStore()
-  const isChanging = loading.changeAssignee === threadId
 
   const filteredUsers = DEMO_USERS.filter((user) =>
     user.name.toLowerCase().includes(search.toLowerCase())
@@ -41,7 +39,7 @@ export function ChangeAssigneeDialog({
     if (user.name === currentAssignee.name || isChanging) {
       return
     }
-    await changeAssignee(threadId, user)
+    await onChangeAssignee(threadId, user)
     toast.success("Assignee updated", {
       description: `Thread assigned to ${user.name}`,
     })
